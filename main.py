@@ -6,6 +6,7 @@ import os
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from io import BytesIO
 
 load_dotenv()
@@ -70,6 +71,7 @@ async def stock(ctx, arg):
 
     stock = yf.Ticker(arg)
     info = stock.info
+    print(info)
     price = round(info.get("currentPrice", None),2)
     # Round percent_change to 2 decimal places if it's a number
     percent_change = round(info.get("regularMarketChangePercent", None),2)
@@ -79,7 +81,7 @@ async def stock(ctx, arg):
     # --- Create an embed dashboard ---
     embed = discord.Embed(
         title=f"📊 {arg.upper()} Stock Dashboard",
-        description=f"Live market snapshot for **{arg.upper()}**",
+        description=f"Live stock information of **{arg.upper()}**",
         color=discord.Color.green() if percent_change and percent_change >= 0 else discord.Color.red()
     )
 
@@ -101,6 +103,12 @@ async def stock(ctx, arg):
         plt.xlabel("Date")
         plt.ylabel(f"Price ({currency})")
         plt.legend()
+
+        # Format the x-axis dates to avoid overlap
+        plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+        plt.gcf().autofmt_xdate(rotation=30)  # rotate labels for readability
+
         plt.tight_layout()
 
         buffer = BytesIO()
