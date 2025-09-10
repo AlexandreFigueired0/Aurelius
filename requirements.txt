@@ -3,3 +3,4 @@ python-dotenv
 yfinance
 pandas
 matplotlib
+psycopg2-binary
