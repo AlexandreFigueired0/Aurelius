@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import os
 import yfinance as yf
 import pandas as pd
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 load_dotenv()
 
@@ -72,21 +74,46 @@ async def stock(ctx, arg):
     # Round percent_change to 2 decimal places if it's a number
     percent_change = round(info.get("regularMarketChangePercent", None),2)
     market_cap = round_market_cap(info.get("marketCap", None))
-    await ctx.send(f"Current stock information for **{arg}**\n💵**Price**: ${price}\n📈**Change**: {percent_change}%\n🏦**Market Cap**: {market_cap}")
+    currency = info.get("currency", "USD")
 
-    # Create an embed dashboard
+    # --- Create an embed dashboard ---
     embed = discord.Embed(
         title=f"📊 {arg.upper()} Stock Dashboard",
         description=f"Live market snapshot for **{arg.upper()}**",
         color=discord.Color.green() if percent_change and percent_change >= 0 else discord.Color.red()
     )
-    
+
     if price:
         embed.add_field(name="💵 Price", value=f"{price:.2f} {currency}", inline=True)
+    if percent_change is not None:
+        embed.add_field(name="📈 Change", value=f"{percent_change:.2f}%", inline=True)
+    if market_cap:
+        embed.add_field(name="🏦 Market Cap", value=market_cap, inline=True)
 
     embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
-    
-    await ctx.send(embed=embed)
+
+    # --- Generate a price chart (last 1 month) ---
+    hist = stock.history(period="1mo")
+    if not hist.empty:
+        plt.figure(figsize=(8, 4))
+        plt.plot(hist.index, hist["Close"], label=arg.upper(), color="blue")
+        plt.title(f"{arg.upper()} - Last 1 Month")
+        plt.xlabel("Date")
+        plt.ylabel(f"Price ({currency})")
+        plt.legend()
+        plt.tight_layout()
+
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
+        plt.close()
+
+        file = discord.File(buffer, filename=f"{arg}_chart.png")
+        embed.set_image(url=f"attachment://{arg}_chart.png")
+
+        await ctx.send(file=file, embed=embed)
+    else:
+        await ctx.send(embed=embed)
 
 
 @bot.command()
