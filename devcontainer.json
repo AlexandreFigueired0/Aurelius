@@ -1,0 +1,13 @@
+//devcontainer.json
+{
+  "name": "Aurelius",
+
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "DevDockerfile"
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+
+
+  // "remoteUser": "root"
+}
