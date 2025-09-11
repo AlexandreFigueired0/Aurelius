@@ -20,9 +20,6 @@ intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix = '!', intents=intents)
-companies = pd.read_csv('companies.csv')  # Assuming a CSV file with 'company name' and 'ticker' columns
-# Trim DataFrame to necessary columns
-companies = companies[['company name', 'ticker']]
 
 def shorten_description(description):
     lines = description.split('.')
@@ -259,6 +256,48 @@ async def chart(ctx, arg, period="1mo"):
     except Exception as e:
         await ctx.send(f"⚠️ Error generating chart: {str(e)}")
 
+@bot.command()
+async def watch(ctx, arg, threshold: float = 10.0):
+    '''Watch a stock and get notified when its price changes by a certain percentage (default: 10%).'''
+    
+    #check if server is stored in db, if not add it
+    server_id = ctx.message.guild.id
+    server_name = ctx.message.guild.name
+    db.insert_server(server_id, server_name)
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{ticker}' not found.")
+        return
 
-bot.run(token, log_handler=handler, log_level=logging.DEBUG) 
+    # Check if stock is already being watched
+    subscribed_stocks = db.get_subscribed_stocks(server_id)
+    for stock_id, change_percentage in subscribed_stocks:
+        existing_ticker = db.get_ticker_by_id(stock_id)
+
+        # Update threshold if the same stock is being watched with a different threshold
+        if existing_ticker == ticker and change_percentage != abs(threshold):
+            db.update_server_stock_threshold(server_id, ticker, abs(threshold))
+            await ctx.send(f"✅ Updated notification threshold for **{ticker}** from {change_percentage}% to {abs(threshold)}%.")
+            return
+        elif existing_ticker == ticker:
+            await ctx.send(f"⚠️ Notifications for **{ticker}** are already set at {change_percentage}%.")
+            return
+        
+
+    db.insert_server_stock(server_id, ticker, abs(threshold))
+    await ctx.send(f"✅ Notifications for **{ticker}** when the price changes by {abs(threshold)}%.")
+
+@bot.command()
+async def unwatch(ctx, arg):
+    '''Stop watching a stock.'''
+    server_id = ctx.message.guild.id
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
+
+    db.delete_server_stock(server_id, ticker)
+    await ctx.send(f"✅ Stopped watching **{ticker}**.")
+
+bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 db.close_connection()

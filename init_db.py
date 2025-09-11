@@ -36,21 +36,11 @@ CREATE TABLE IF NOT EXISTS subscribed_stock (
     id SERIAL PRIMARY KEY,
     server_id INTEGER REFERENCES server(id) ON DELETE CASCADE,
     stock_id INTEGER REFERENCES stock(id) ON DELETE CASCADE,
-    threshold DECIMAL(5,2) NOT NULL DEFAULT 10.0
+    threshold DECIMAL(5,2) NOT NULL DEFAULT 10.0,
+    UNIQUE (server_id, stock_id)
 );
 ''')
 
-# Add separate UserSubscription table for user-specific subscriptions
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS user_subscription (
-    id SERIAL PRIMARY KEY,
-    subscribed_stock_id INTEGER REFERENCES subscribed_stock(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL,
-    channel_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(subscribed_stock_id, user_id, channel_id)
-);
-''')
 
 # Check if stock table is empty before inserting initial data
 cursor.execute('SELECT COUNT(*) FROM stock')
