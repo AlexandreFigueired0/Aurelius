@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from io import BytesIO
+import database_service as db
 
 load_dotenv()
 
@@ -47,12 +48,6 @@ def round_market_cap(market_cap):
     else:
         return f"${market_cap}"
 
-def return_ticker(company_name):
-    matches = companies[companies['company name'].str.lower().str.contains(company_name.lower())]
-    if not matches.empty:
-        return matches.iloc[0]['ticker']
-    return None
-
 @bot.event
 async def  on_ready():
     print(f"{bot.user.name} is ready")
@@ -73,14 +68,12 @@ async def hello(ctx):
 async def stock(ctx, arg):
     '''Fetch live stock  price, change %, market cap for a given ticker symbol.'''
 
-    # Check if arg is a company name and convert to ticker if necessary
-    if arg.upper() not in companies['ticker'].values:
-        arg = return_ticker(arg)
-        if not arg:
-            await ctx.send(f"No ticker found for company name: {arg}")
-            return
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
 
-    stock = yf.Ticker(arg)
+    stock = yf.Ticker(ticker)
     info = stock.fast_info
     price = info.get("lastPrice", None)
     prev_close = info.get("previousClose", None)
@@ -90,8 +83,8 @@ async def stock(ctx, arg):
 
     # --- Create an embed dashboard ---
     embed = discord.Embed(
-        title=f"📊 {arg.upper()} Stock Dashboard",
-        description=f"Live stock information of **{arg.upper()}**",
+        title=f"📊 {ticker} Stock Dashboard",
+        description=f"Live stock information of **{ticker}**",
         color=discord.Color.green() if percent_change and percent_change >= 0 else discord.Color.red()
     )
 
@@ -120,7 +113,7 @@ async def stock(ctx, arg):
         ax.fill_between(x, y, y.min(), color=line_color, alpha=0.1)
 
         # Title & labels
-        ax.set_title(f"{arg.upper()} - Last 1 Month", fontsize=14, weight="bold")
+        ax.set_title(f"{ticker} - Last 1 Month", fontsize=14, weight="bold")
         ax.set_xlabel("Date", fontsize=12)
         ax.set_ylabel(f"Price ({currency})", fontsize=12)
 
@@ -153,8 +146,8 @@ async def stock(ctx, arg):
         buffer.seek(0)
         plt.close(fig)
 
-        file = discord.File(buffer, filename=f"{arg}_chart.png")
-        embed.set_image(url=f"attachment://{arg}_chart.png")
+        file = discord.File(buffer, filename=f"{ticker}_chart.png")
+        embed.set_image(url=f"attachment://{ticker}_chart.png")
 
         await ctx.send(file=file, embed=embed)
     else:
@@ -165,14 +158,12 @@ async def stock(ctx, arg):
 async def info(ctx, arg):
     '''Fetch company information (description, sector, CEO, etc.) for a given ticker symbol.'''
 
-    # Check if arg is a company name and convert to ticker if necessary
-    if arg.upper() not in companies['ticker'].values:
-        arg = return_ticker(arg)
-        if not arg:
-            await ctx.send(f"No ticker found for company name: {arg}")
-            return
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
 
-    stock = yf.Ticker(arg)
+    stock = yf.Ticker(ticker)
     info = stock.info
     description = info['longBusinessSummary']
     sector = info.get('sector', 'N/A')
@@ -187,8 +178,8 @@ async def info(ctx, arg):
 
         # --- Create an embed dashboard ---
     embed = discord.Embed(
-        title=f"📊 {arg.upper()} Info",
-        description=f"Information of **{arg.upper()}**",
+        title=f"📊 {ticker} Info",
+        description=f"Information of **{ticker}**",
         color=discord.Color.blue()
     )
 
@@ -209,18 +200,18 @@ async def info(ctx, arg):
 @bot.command()
 async def chart(ctx, arg, period="1mo"):
     '''Fetch historical stock data for a given ticker symbol and period (default: 1 month).'''
-    # Check if arg is a company name and convert to ticker if necessary
-    if arg.upper() not in companies['ticker'].values:
-        arg = return_ticker(arg)
-        if not arg:
-            await ctx.send(f"No ticker found for company name: {arg}")
-            return
+
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
+
     try:
-        stock = yf.Ticker(arg)
+        stock = yf.Ticker(ticker)
         hist = stock.history(period=period)
 
         if hist.empty:
-            await ctx.send(f"❌ No historical data found for **{arg.upper()}** with period `{period}`.")
+            await ctx.send(f"❌ No historical data found for **{ticker}** with period `{period}`.")
             return
 
         # Prepare data
@@ -236,7 +227,7 @@ async def chart(ctx, arg, period="1mo"):
         ax.plot(x, y, color=line_color, linewidth=2)
         ax.fill_between(x, y, y.min(), color=line_color, alpha=0.1)
 
-        ax.set_title(f"{arg.upper()} - Last {period}", fontsize=14, weight="bold", color="white")
+        ax.set_title(f"{ticker} - Last {period}", fontsize=14, weight="bold", color="white")
         ax.set_ylabel("Price (USD)", fontsize=12, color="white")
 
         # Format x-axis
@@ -262,12 +253,12 @@ async def chart(ctx, arg, period="1mo"):
         plt.close(fig)
 
         # Send chart to Discord
-        file = discord.File(buffer, filename=f"{arg}_chart.png")
+        file = discord.File(buffer, filename=f"{ticker}_chart.png")
         await ctx.send(file=file)
 
     except Exception as e:
         await ctx.send(f"⚠️ Error generating chart: {str(e)}")
 
 
-
 bot.run(token, log_handler=handler, log_level=logging.DEBUG) 
+db.close_connection()
