@@ -1,3 +1,4 @@
 *.env
 companies.csv
 *.log
+start_bd.sh

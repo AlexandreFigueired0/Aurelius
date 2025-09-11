@@ -81,12 +81,12 @@ async def stock(ctx, arg):
             return
 
     stock = yf.Ticker(arg)
-    info = stock.info
-    price = round(info.get("currentPrice", None),2)
-    # Round percent_change to 2 decimal places if it's a number
-    percent_change = round(info.get("regularMarketChangePercent", None),2)
-    market_cap = round_market_cap(info.get("marketCap", None))
+    info = stock.fast_info
+    price = info.get("lastPrice", None)
+    prev_close = info.get("previousClose", None)
+    market_cap = round_market_cap(info.get("marketCap", 0))
     currency = info.get("currency", "USD")
+    percent_change = round(((price - prev_close) / prev_close) * 100, 2)
 
     # --- Create an embed dashboard ---
     embed = discord.Embed(
