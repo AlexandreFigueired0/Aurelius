@@ -26,5 +26,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/aurelius:latest
+          tags: ${{ secrets.DOCKER_NAME }}/aurelius:latest
           file: ./Dockerfile
