@@ -1,0 +1,1 @@
+docker build -t aurelius -f Dockerfile .

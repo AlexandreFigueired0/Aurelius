@@ -1,0 +1,1 @@
+docker run --name aurelius --network aurelius_net --env-file .env -d aurelius
