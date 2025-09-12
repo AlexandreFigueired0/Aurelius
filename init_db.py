@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS subscribed_stock (
     server_id INTEGER REFERENCES server(id) ON DELETE CASCADE,
     stock_id INTEGER REFERENCES stock(id) ON DELETE CASCADE,
     threshold DECIMAL(5,2) NOT NULL DEFAULT 10.0,
+    alerted BOOLEAN NOT NULL DEFAULT FALSE,
+    last_alerted TIMESTAMP NULL,
     UNIQUE (server_id, stock_id)
 );
 ''')

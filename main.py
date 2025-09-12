@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import logging
 from dotenv import load_dotenv
 import os
@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from io import BytesIO
 import database_service as db
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -20,6 +21,8 @@ intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix = '!', intents=intents)
+
+STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
 
 def shorten_description(description):
     lines = description.split('.')
@@ -46,8 +49,9 @@ def round_market_cap(market_cap):
         return f"${market_cap}"
 
 @bot.event
-async def  on_ready():
+async def on_ready():
     print(f"{bot.user.name} is ready")
+    check_stock_percent_changes.start()
 
 @bot.event
 async def on_message(message):
@@ -266,18 +270,18 @@ async def watch(ctx, arg, threshold: float = 10.0):
     db.insert_server(server_id, server_name)
     ticker = db.get_ticker_by_name(arg)
     if not ticker:
-        await ctx.send(f"❌ Ticker symbol for '{ticker}' not found.")
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
 
     # Check if stock is already being watched
     subscribed_stocks = db.get_subscribed_stocks(server_id)
-    for stock_id, change_percentage in subscribed_stocks:
+    for stock_id, change_percentage, alerted, last_alerted in subscribed_stocks:
         existing_ticker = db.get_ticker_by_id(stock_id)
 
         # Update threshold if the same stock is being watched with a different threshold
         if existing_ticker == ticker and change_percentage != abs(threshold):
             db.update_server_stock_threshold(server_id, ticker, abs(threshold))
-            await ctx.send(f"✅ Updated notification threshold for **{ticker}** from {change_percentage}% to {abs(threshold)}%.")
+            await ctx.send(f"✏️ Updated notification threshold for **{ticker}** from {change_percentage}% to {abs(threshold)}%.")
             return
         elif existing_ticker == ticker:
             await ctx.send(f"⚠️ Notifications for **{ticker}** are already set at {change_percentage}%.")
@@ -297,7 +301,82 @@ async def unwatch(ctx, arg):
         return
 
     db.delete_server_stock(server_id, ticker)
-    await ctx.send(f"✅ Stopped watching **{ticker}**.")
+    await ctx.send(f"🗑️ Stopped watching **{ticker}**.")
+
+@bot.command()
+async def list(ctx):
+    '''List all watched stocks for this server.'''
+    server_id = ctx.message.guild.id
+    subscribed_stocks = db.get_subscribed_stocks(server_id)
+
+    if not subscribed_stocks:
+        await ctx.send("ℹ️ No stocks are currently being watched on this server.")
+        return
+
+    embed = discord.Embed(
+        title="👀 Watched Stocks",
+        description="Here are the stocks currently being watched on this server:",
+        color=discord.Color.blue()
+    )
+
+    for stock_id, threshold, alerted, last_alerted in subscribed_stocks:
+        ticker = db.get_ticker_by_id(stock_id)
+        embed.add_field(name=ticker, value=f"Notification Threshold: {threshold}%", inline=False)
+
+    await ctx.send(embed=embed)
+
+@tasks.loop(minutes=1)
+async def check_stock_percent_changes():
+    '''Check stock price changes for all watched stocks and notify servers if thresholds are crossed.'''
+
+    print("Checking stock price changes...")
+    #Embed for notifications
+    embed = discord.Embed(
+        title="🔔 Stock Price Alert",
+        description=f"The following stocks have crossed their notification thresholds:",
+        color=discord.Color.yellow()
+    )
+    embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+
+
+    for guild in bot.guilds:
+        server_id = guild.id
+        subscribed_stocks = db.get_subscribed_stocks(server_id)
+        count = 0
+
+        for stock_id, threshold, alerted, last_alerted in subscribed_stocks:
+            ticker = db.get_ticker_by_id(stock_id)
+            stock = yf.Ticker(ticker)
+            info = stock.fast_info
+            price = info.get("lastPrice", None)
+            prev_close = info.get("previousClose", None)
+
+            percent_change = round(((price - prev_close) / prev_close) * 100, 2)
+            if abs(percent_change) >= threshold:
+                if not alerted:
+                    embed.add_field(name=ticker, value=f"Price: {price:.2f} USD\nChange: {percent_change:.2f}%", inline=False)
+                    count += 1
+                    db.mark_stock_as_alerted(server_id, ticker)
+            else: # Reset alert state if price goes back within threshold
+                db.reset_stock_alert(server_id, ticker)
+
+        channel = discord.utils.get(guild.text_channels, name=STOCKS_ALERT_CHANNEL_NAME)
+        # Send message to stock alert channel, if channel does not exist, create it
+        if not channel:
+            # Create read-only channel for stock alerts
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(send_messages=False, view_channel=True),
+                guild.me: discord.PermissionOverwrite(send_messages=True, view_channel=True)
+            }
+            channel = await guild.create_text_channel(STOCKS_ALERT_CHANNEL_NAME, overwrites=overwrites)
+            
+            await channel.send("📈 Stock price alerts are now active!")
+            print(f"Created channel: {STOCKS_ALERT_CHANNEL_NAME} in server: {guild.name} ({guild.id})")
+
+        if count > 0:
+            await channel.send(embed=embed)
+            
+
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 db.close_connection()

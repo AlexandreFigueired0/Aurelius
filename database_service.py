@@ -12,6 +12,22 @@ conn = psycopg2.connect(
 
 def get_ticker_by_name(company_name):
     cursor = conn.cursor()
+    # First check if the input is already a ticker
+    cursor.execute('SELECT ticker FROM stock WHERE ticker = %s', (company_name.upper(),))
+    result = cursor.fetchone()
+    if result:
+        result = result[0]
+        cursor.close()
+        return result
+
+    # If not, search by exact company name match (case-insensitive)
+    cursor.execute('SELECT ticker FROM stock WHERE name ILIKE %s', (company_name,))
+    result = cursor.fetchone()
+    if result:
+        cursor.close()
+        return result[0]
+        
+    # If still not found, search by partial company name match (case-insensitive)
     cursor.execute('SELECT ticker FROM stock WHERE name ILIKE %s', (f'%{company_name}%',))
     result = cursor.fetchone()
     cursor.close()
@@ -57,10 +73,10 @@ def get_subscribed_stocks(discord_server_id):
     cursor = conn.cursor()
     server_id = get_server_internal_id(discord_server_id)
 
-    cursor.execute('SELECT stock_id, threshold FROM subscribed_stock WHERE server_id = %s', (server_id,))
+    cursor.execute('SELECT stock_id, threshold, alerted, last_alerted FROM subscribed_stock WHERE server_id = %s', (server_id,))
     results = cursor.fetchall()
     cursor.close()
-    return results  # List of (stock_id, threshold) tuples
+    return results  # List of (stock_id, threshold, alerted, last_alerted) tuples
 
     cursor.execute('SELECT stock_id, threshold FROM subscribed_stock WHERE server_id = %s', (server_id,))
     results = cursor.fetchall()
@@ -79,7 +95,7 @@ def update_server_stock_threshold(discord_server_id, ticker, new_threshold):
     server_id = get_server_internal_id(discord_server_id)
     stock_id = get_stock_internal_id(ticker)
 
-    cursor.execute('UPDATE subscribed_stock SET threshold = %s WHERE server_id = %s AND stock_id = %s', (new_threshold, server_id, stock_id))
+    cursor.execute('UPDATE subscribed_stock SET threshold = %s, alerted = FALSE, last_alerted = NULL WHERE server_id = %s AND stock_id = %s', (new_threshold, server_id, stock_id))
     conn.commit()
     cursor.close()
 
@@ -89,6 +105,25 @@ def delete_server_stock(discord_server_id, ticker):
     stock_id = get_stock_internal_id(ticker)
 
     cursor.execute('DELETE FROM subscribed_stock WHERE server_id = %s AND stock_id = %s', (server_id, stock_id))
+    conn.commit()
+    cursor.close()
+
+
+def mark_stock_as_alerted(discord_server_id, ticker):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    stock_id = get_stock_internal_id(ticker)
+
+    cursor.execute('UPDATE subscribed_stock SET alerted = TRUE, last_alerted = NOW() WHERE server_id = %s AND stock_id = %s', (server_id, stock_id))
+    conn.commit()
+    cursor.close()
+
+def reset_stock_alert(discord_server_id, ticker):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    stock_id = get_stock_internal_id(ticker)
+
+    cursor.execute('UPDATE subscribed_stock SET alerted = FALSE, last_alerted = NULL WHERE server_id = %s AND stock_id = %s', (server_id, stock_id))
     conn.commit()
     cursor.close()
 
