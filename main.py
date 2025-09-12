@@ -331,15 +331,15 @@ async def check_stock_percent_changes():
 
     print("Checking stock price changes...")
     #Embed for notifications
-    embed = discord.Embed(
-        title="🔔 Stock Price Alert",
-        description=f"The following stocks have crossed their notification thresholds:",
-        color=discord.Color.yellow()
-    )
-    embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
 
 
     for guild in bot.guilds:
+        embed = discord.Embed(
+            title="🔔 Stock Price Alert",
+            description=f"The following stocks have crossed their notification thresholds:",
+            color=discord.Color.yellow()
+        )
+        embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
         server_id = guild.id
         subscribed_stocks = db.get_subscribed_stocks(server_id)
         count = 0
@@ -358,7 +358,8 @@ async def check_stock_percent_changes():
                     count += 1
                     db.mark_stock_as_alerted(server_id, ticker)
             else: # Reset alert state if price goes back within threshold
-                db.reset_stock_alert(server_id, ticker)
+                if alerted:
+                    db.reset_stock_alert(server_id, ticker)
 
         channel = discord.utils.get(guild.text_channels, name=STOCKS_ALERT_CHANNEL_NAME)
         # Send message to stock alert channel, if channel does not exist, create it

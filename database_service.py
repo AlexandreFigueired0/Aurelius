@@ -78,10 +78,6 @@ def get_subscribed_stocks(discord_server_id):
     cursor.close()
     return results  # List of (stock_id, threshold, alerted, last_alerted) tuples
 
-    cursor.execute('SELECT stock_id, threshold FROM subscribed_stock WHERE server_id = %s', (server_id,))
-    results = cursor.fetchall()
-    cursor.close()
-    return results  # List of (stock_id, threshold) tuples
 
 def get_ticker_by_id(stock_id):
     cursor = conn.cursor()
