@@ -415,7 +415,8 @@ async def news(ctx, arg):
         color=discord.Color.blue()
     )
 
-    for item in news_items:
+    #TODO: paginate
+    for item in news_items[:5]:
         content = item["content"]
         date_str = content['pubDate'].replace("T", " ").replace("Z", "")
         embed.add_field(name=content['title'], value=f"{content['summary']}\nPublished on: {date_str}\n[Read more]({content['canonicalUrl']['url']})", inline=False)

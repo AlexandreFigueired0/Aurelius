@@ -49,11 +49,7 @@ cursor.execute('SELECT COUNT(*) FROM stock')
 count = cursor.fetchone()[0]
 if count > 0:
     print("Stock table already has data. Skipping initial data insertion.")
-    # Print current entries in the stock table, with id, ticker, and name
-    cursor.execute('SELECT id, ticker, name FROM stock')
-    rows = cursor.fetchall()
-    for row in rows:
-        print(f"ID: {row[0]}, Ticker: {row[1]}, Name: {row[2]}")
+
 else:
     # Fill Stock table with initial data from companies.csv
     companies = pd.read_csv('companies.csv')
