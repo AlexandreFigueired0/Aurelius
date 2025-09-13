@@ -397,32 +397,68 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def news(ctx, arg, page_number: int = 1):
+async def news(ctx, arg):
     '''Fetch latest news articles for a given ticker symbol.'''
 
-    ticker = db.get_ticker_by_name(arg)
+
+    ticker = arg#db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
     
     stock = yf.Ticker(ticker)
     news_items = stock.news
+    n_pages = -(len(news_items) // -NEWS_PER_PAGE)  # Ceiling division
+   
     if not news_items:
         await ctx.send(f"❌ No news articles found for '{ticker}'.")
         return
     
-    n_pages = (len(news_items) // NEWS_PER_PAGE) + 1
-    embed = discord.Embed(
-        title=f"Latest News for {ticker}",
-        color=discord.Color.blue()
-    )
 
-    for item in news_items[NEWS_PER_PAGE * page_number]:
-        content = item["content"]
-        date_str = content['pubDate'].replace("T", " ").replace("Z", "")
-        embed.add_field(name=content['title'], value=f"{content['summary']}\nPublished on: {date_str}\n[Read more]({content['canonicalUrl']['url']})", inline=False)
+    def build_embed(page_number):
+        # Calculate ceiling of news items / NEWS_PER_PAGE
+        embed = discord.Embed(
+            title=f"Latest News for {ticker} (Page {page_number}/{n_pages})",
+            color=discord.Color.blue()
+        )
 
-    await ctx.send(embed=embed)
+        for item in news_items[NEWS_PER_PAGE * (page_number - 1): NEWS_PER_PAGE * page_number]:
+            content = item["content"]
+            date_str = content['pubDate'].replace("T", " ").replace("Z", " ")
+            embed.add_field(name=content['title'], value=f"{content['summary']}\nPublished on: {date_str}\n[Read more]({content['canonicalUrl']['url']})", inline=False)
+        embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+        return embed
+    
+    next_page_reaction = "▶️"
+    page = 1
+    cur_message = await ctx.send(embed=build_embed(page))
+
+    if n_pages > 1:
+        await cur_message.add_reaction(next_page_reaction)
+
+    def check(reaction, user):
+        return (
+            user == ctx.author
+            and reaction.message.id == cur_message.id
+            and str(reaction.emoji) == "▶️"
+        )
+
+    member = ctx.author
+
+    page += 1
+    while page <= n_pages:
+        reaction, user = await bot.wait_for("reaction_add",  check=check)
+
+        next_message = await ctx.send(embed=build_embed(page))
+
+        if page < n_pages:
+            await next_message.add_reaction(next_page_reaction)
+
+        cur_message = next_message
+        page += 1
+
+
+
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 db.close_connection()
