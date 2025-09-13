@@ -21,6 +21,7 @@ intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
+NEWS_PER_PAGE = 5
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
 
@@ -396,7 +397,7 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def news(ctx, arg):
+async def news(ctx, arg, page_number: int = 1):
     '''Fetch latest news articles for a given ticker symbol.'''
 
     ticker = db.get_ticker_by_name(arg)
@@ -410,13 +411,13 @@ async def news(ctx, arg):
         await ctx.send(f"❌ No news articles found for '{ticker}'.")
         return
     
+    n_pages = (len(news_items) // NEWS_PER_PAGE) + 1
     embed = discord.Embed(
         title=f"Latest News for {ticker}",
         color=discord.Color.blue()
     )
 
-    #TODO: paginate
-    for item in news_items[:5]:
+    for item in news_items[NEWS_PER_PAGE * page_number]:
         content = item["content"]
         date_str = content['pubDate'].replace("T", " ").replace("Z", "")
         embed.add_field(name=content['title'], value=f"{content['summary']}\nPublished on: {date_str}\n[Read more]({content['canonicalUrl']['url']})", inline=False)
