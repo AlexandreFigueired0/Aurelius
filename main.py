@@ -330,8 +330,6 @@ async def check_stock_percent_changes():
     '''Check stock price changes for all watched stocks and notify servers if thresholds are crossed.'''
 
     print("Checking stock price changes...")
-    #Embed for notifications
-
 
     for guild in bot.guilds:
         embed = discord.Embed(
@@ -397,6 +395,32 @@ async def help(ctx):
 
     await ctx.send(embed=embed)
 
+@bot.command()
+async def news(ctx, arg):
+    '''Fetch latest news articles for a given ticker symbol.'''
+
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
+    
+    stock = yf.Ticker(ticker)
+    news_items = stock.news
+    if not news_items:
+        await ctx.send(f"❌ No news articles found for '{ticker}'.")
+        return
+    
+    embed = discord.Embed(
+        title=f"Latest News for {ticker}",
+        color=discord.Color.blue()
+    )
+
+    for item in news_items:
+        content = item["content"]
+        date_str = content['pubDate'].replace("T", " ").replace("Z", "")
+        embed.add_field(name=content['title'], value=f"{content['summary']}\nPublished on: {date_str}\n[Read more]({content['canonicalUrl']['url']})", inline=False)
+
+    await ctx.send(embed=embed)
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 db.close_connection()
