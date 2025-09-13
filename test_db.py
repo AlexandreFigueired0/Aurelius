@@ -14,7 +14,7 @@ cursor = conn.cursor()
 
 
 # Get entries of subscribed_stock table
-cursor.execute('SELECT * FROM subscribed_stock')
+cursor.execute('SELECT * FROM stocks')
 rows = cursor.fetchall()
 for row in rows:
     print(row)

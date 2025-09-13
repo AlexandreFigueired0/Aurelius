@@ -20,7 +20,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix = '!', intents=intents)
+bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
 
@@ -376,7 +376,26 @@ async def check_stock_percent_changes():
 
         if count > 0:
             await channel.send(embed=embed)
-            
+
+@bot.command()
+async def help(ctx):
+    '''Show help information for all commands.'''
+    embed = discord.Embed(
+        title="❓ Aurelius Help Menu",
+        description="Here are the available commands:",
+        color=discord.Color.blue()
+    )
+
+    embed.add_field(name="!hello", value="Greet the bot.", inline=False)
+    embed.add_field(name="!stock <ticker>", value="Fetch live stock price, change %, market cap for a given ticker symbol.", inline=False)
+    embed.add_field(name="!info <ticker>", value="Fetch company information (description, sector, CEO, etc.) for a given ticker symbol.", inline=False)
+    embed.add_field(name="!chart <ticker> [period]", value="Fetch historical stock data for a given ticker symbol and period (default: 1 month).", inline=False)
+    embed.add_field(name="!watch <ticker> [threshold]", value="Watch a stock and get notified when its price changes by a certain percentage (default: 10%).", inline=False)
+    embed.add_field(name="!unwatch <ticker>", value="Stop watching a stock.", inline=False)
+    embed.add_field(name="!list", value="List all watched stocks for this server.", inline=False)
+    embed.add_field(name="!help", value="Show this help information.", inline=False)
+
+    await ctx.send(embed=embed)
 
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
