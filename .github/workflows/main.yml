@@ -22,7 +22,7 @@ jobs:
       - name: Connect and deploy
         run: |
           ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /Aurelius
+            cd Aurelius
             git pull
             docker stop aurelius
             docker rm aurelius
