@@ -46,16 +46,16 @@ See source code in [main.py](main.py), DB layer in [database_service.py](databas
 
 ## Local Development (VS Code Dev Container)
 
-A ready-to-run dev environment is defined in [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json).
+A ready-to-run dev environment usin VS Code Dev Container
 
-- Start the Dev Container (Command Palette > Dev Containers: Reopen in Container).
+- Start the Dev Container based on the image defined in DevDockerfile
 - Ensure the DB is running on the same Docker network:
 
 ## Deployment (GitHub Actions → EC2)
 
 Pushes to `main` trigger [/.github/workflows/main.yml](.github/workflows/main.yml) which:
 
-- SSHes into your EC2 host
+- SSHes into the EC2 host
 - Pulls latest code
 - Rebuilds the bot image with the updates
 - Runs the bot container with the updates
