@@ -52,8 +52,8 @@ jobs:
             git pull
             docker stop aurelius
             docker rm aurelius
+            docker rmi -f aurelius || true
             docker pull ${{ secrets.DOCKER_NAME }}/aurelius:latest
-            docker rmi aurelius || true
             docker tag ${{ secrets.DOCKER_NAME }}/aurelius:latest aurelius
             ./scripts/run_bot_container.sh
           EOF
