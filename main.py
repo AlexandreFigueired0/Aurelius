@@ -326,6 +326,7 @@ async def list(ctx):
 
         # If is alerted, point out
         if alerted:
+            print(f"33333333333333333333333333333333333333333333333333333333333333333333333333")
             ticker = f"⚠️ {ticker}"
         
         embed.add_field(name=ticker, value=f"Notification Threshold: {threshold}%", inline=False)
