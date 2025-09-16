@@ -57,4 +57,5 @@ jobs:
             docker pull ${{ secrets.DOCKER_NAME }}/aurelius:latest
             docker tag ${{ secrets.DOCKER_NAME }}/aurelius:latest aurelius
             ./scripts/run_bot_container.sh
+            docker rmi -f ${{ secrets.DOCKER_NAME }}/aurelius:latest
           EOF
