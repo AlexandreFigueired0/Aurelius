@@ -502,10 +502,10 @@ async def metrics(ctx, arg):
     forward_pe = info.get("forwardPE", None)
     dividend_yield = info.get("dividendYield", None)
     price_to_book = info.get("priceToBook", None)
+    beta = info.get("beta", None)
     target_high = info.get("targetHighPrice", None)
     target_low = info.get("targetLowPrice", None)
     target_mean = info.get("targetMeanPrice", None)
-    beta = info.get("beta", None)
     recommendation = info.get("recommendationKey", None)
 
     earnings_growth = info.get("earningsGrowth", None)
