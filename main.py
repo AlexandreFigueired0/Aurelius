@@ -25,6 +25,28 @@ NEWS_PER_PAGE = 5
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
 
+def simple_iv_calculation(ev, shares_outstanding):
+    return round(ev / shares_outstanding, 2)
+
+def dcf_iv_calculation(fcf, revenue_growth, shares_outstanding, years=5, discount_rate=0.10, terminal_growth=0.03):
+    fcf_projections = []
+    total_pv = 0
+
+    # Project FCF for n years
+    for year in range(1, years + 1):
+        fcf *= (1 + revenue_growth)  # grow FCF
+        fcf_projections.append(fcf)
+        total_pv += fcf / ((1 + discount_rate) ** year)
+
+    # Terminal Value
+    terminal_fcf = fcf_projections[-1] * (1 + terminal_growth)
+    terminal_value = terminal_fcf / (discount_rate - terminal_growth)
+    terminal_pv = terminal_value / ((1 + discount_rate) ** years)
+
+    # Enterprise Value (sum of PVs)
+    iv_dcf = round((total_pv + terminal_pv) / shares_outstanding, 2)
+    return iv_dcf
+
 def shorten_description(description):
     lines = description.split('.')
     MAX = 1024
@@ -37,17 +59,18 @@ def shorten_description(description):
         ret += line + '.'
     return ret
 
-def round_market_cap(market_cap):
-    if market_cap >= 1_000_000_000_000:
-        return f"${market_cap / 1_000_000_000_000:.2f}T"
-    elif market_cap >= 1_000_000_000:
-        return f"${market_cap / 1_000_000_000:.2f}B"
-    elif market_cap >= 1_000_000:
-        return f"${market_cap / 1_000_000:.2f}M"
-    elif market_cap >= 1_000:
-        return f"${market_cap / 1_000:.2f}K"
+def round_large_number(number):
+    """Format large numbers with suffixes (K, M, B, T)."""
+    if number >= 1_000_000_000_000:
+        return f"{number / 1_000_000_000_000:.2f}T"
+    elif number >= 1_000_000_000:
+        return f"{number / 1_000_000_000:.2f}B"
+    elif number >= 1_000_000:
+        return f"{number / 1_000_000:.2f}M"
+    elif number >= 1_000:
+        return f"{number / 1_000:.2f}K"
     else:
-        return f"${market_cap}"
+        return f"{number}"
 
 @bot.event
 async def on_ready():
@@ -79,7 +102,7 @@ async def stock(ctx, arg):
     info = stock.fast_info
     price = info.get("lastPrice", None)
     prev_close = info.get("previousClose", None)
-    market_cap = round_market_cap(info.get("marketCap", 0))
+    market_cap = round_large_number(info.get("marketCap", 0))
     currency = info.get("currency", "USD")
     percent_change = round(((price - prev_close) / prev_close) * 100, 2)
 
@@ -95,7 +118,7 @@ async def stock(ctx, arg):
     if percent_change is not None:
         embed.add_field(name="📈 Change", value=f"{percent_change:.2f}%", inline=True)
     if market_cap:
-        embed.add_field(name="🏦 Market Cap", value=market_cap, inline=True)
+        embed.add_field(name="🏦 Market Cap", value=f"${market_cap}", inline=True)
 
     embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
 
@@ -392,6 +415,8 @@ async def help(ctx):
     embed.add_field(name="!watch <ticker> [threshold]", value="Watch a stock and get notified when its price changes by a certain percentage (default: 10%).", inline=False)
     embed.add_field(name="!unwatch <ticker>", value="Stop watching a stock.", inline=False)
     embed.add_field(name="!list", value="List all watched stocks for this server.", inline=False)
+    embed.add_field(name="!news <ticker>", value="Fetch latest news articles for a given ticker symbol.", inline=False)
+    embed.add_field(name="!metrics <ticker>", value="Fetch key financial metrics for a given ticker symbol.", inline=False)
     embed.add_field(name="!help", value="Show this help information.", inline=False)
 
     await ctx.send(embed=embed)
@@ -457,6 +482,64 @@ async def news(ctx, arg):
         cur_message = next_message
         page += 1
 
+@bot.command()
+async def metrics(ctx, arg):
+    '''Fetch key financial metrics for a given ticker symbol.'''
+
+    ticker = db.get_ticker_by_name(arg)
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
+    stock = yf.Ticker(ticker)
+    info = stock.get_info()
+    if not info:
+        await ctx.send(f"❌ No financial metrics found for '{ticker}'.")
+        return
+    
+
+    ev = info.get("enterpriseValue", None)
+    trailing_pe = info.get("trailingPE", None)
+    forward_pe = info.get("forwardPE", None)
+    dividend_yield = info.get("dividendYield", None)
+    price_to_book = info.get("priceToBook", None)
+    target_high = info.get("targetHighPrice", None)
+    target_low = info.get("targetLowPrice", None)
+    target_mean = info.get("targetMeanPrice", None)
+    beta = info.get("beta", None)
+    recommendation = info.get("recommendationKey", None)
+
+    earnings_growth = info.get("earningsGrowth", None)
+    shares_outstanding = info.get("sharesOutstanding", None)
+    revenue_growth = info.get("revenueGrowth", None)
+    fcf = info.get("freeCashflow", None)
+    iv_simple = ev / shares_outstanding
+    fcf_projections = []
+    years = 5
+    discount_rate = 0.10
+    total_pv = 0
+    terminal_growth = 0.03
+
+    # iv_simple = simple_iv_calculation(ev, shares_outstanding)
+    # iv_dcf = dcf_iv_calculation(fcf, revenue_growth, shares_outstanding, years, discount_rate, terminal_growth)
+
+    # --- Create an embed dashboard ---
+    embed = discord.Embed(
+        title=f"📊 {ticker} Key Financial Metrics",
+        description=f"Key financial metrics of **{ticker}**"
+    )
+    embed.add_field(name="💼 Enterprise Value (EV)", value=f"${round_large_number(ev)}" if ev else "N/A", inline=True)
+    embed.add_field(name="📊 Trailing P/E", value=f"{trailing_pe:.2f}" if trailing_pe else "N/A", inline=True)
+    embed.add_field(name="🔮 Forward P/E", value=f"{forward_pe:.2f}" if forward_pe else "N/A", inline=True)
+    embed.add_field(name="💰 Dividend Yield", value=f"{dividend_yield:.2f}%" if dividend_yield else "N/A", inline=True)
+    embed.add_field(name="🏦 Price to Book", value=f"{price_to_book:.2f}" if price_to_book else "N/A", inline=True)
+    embed.add_field(name="🎯 Target Price (High)", value=f"${target_high:,.2f}" if target_high else "N/A", inline=True)
+    embed.add_field(name="🎯 Target Price (Low)", value=f"${target_low:,.2f}" if target_low else "N/A", inline=True)
+    embed.add_field(name="🎯 Target Price (Mean)", value=f"${target_mean:,.2f}" if target_mean else "N/A", inline=True)
+    embed.add_field(name="📈 Beta", value=f"{beta:.2f}" if beta else "N/A", inline=True)
+    embed.add_field(name="📝 Recommendation", value=recommendation.capitalize() if recommendation else "N/A", inline=True)
+
+    embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+    await ctx.send(embed=embed)
 
 
 

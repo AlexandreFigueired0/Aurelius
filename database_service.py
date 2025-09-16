@@ -10,6 +10,8 @@ conn = psycopg2.connect(
     port='5432'
 )
 
+# conn = None
+
 def get_ticker_by_name(company_name):
     cursor = conn.cursor()
     # First check if the input is already a ticker
