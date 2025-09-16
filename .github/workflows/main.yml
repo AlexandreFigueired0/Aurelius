@@ -28,7 +28,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_NAME }}/aurelius:latest
+          tags: aurelius:latest
 
   deploy:
     runs-on: ubuntu-latest
