@@ -5,6 +5,31 @@ on:
     branches: [ main ]
 
 jobs:
+
+  build_image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_NAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_NAME }}/aurelius:latest
+
   deploy:
     runs-on: ubuntu-latest
 
@@ -26,6 +51,8 @@ jobs:
             git pull
             docker stop aurelius
             docker rm aurelius
-            ./scripts/build_bot_container.sh
+            docker pull ${{ secrets.DOCKER_NAME }}/aurelius:latest
+            docker rmi aurelius || true
+            docker tag ${{ secrets.DOCKER_NAME }}/aurelius:latest aurelius
             ./scripts/run_bot_container.sh
           EOF

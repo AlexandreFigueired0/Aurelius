@@ -25,28 +25,6 @@ NEWS_PER_PAGE = 5
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
 
-def simple_iv_calculation(ev, shares_outstanding):
-    return round(ev / shares_outstanding, 2)
-
-def dcf_iv_calculation(fcf, revenue_growth, shares_outstanding, years=5, discount_rate=0.10, terminal_growth=0.03):
-    fcf_projections = []
-    total_pv = 0
-
-    # Project FCF for n years
-    for year in range(1, years + 1):
-        fcf *= (1 + revenue_growth)  # grow FCF
-        fcf_projections.append(fcf)
-        total_pv += fcf / ((1 + discount_rate) ** year)
-
-    # Terminal Value
-    terminal_fcf = fcf_projections[-1] * (1 + terminal_growth)
-    terminal_value = terminal_fcf / (discount_rate - terminal_growth)
-    terminal_pv = terminal_value / ((1 + discount_rate) ** years)
-
-    # Enterprise Value (sum of PVs)
-    iv_dcf = round((total_pv + terminal_pv) / shares_outstanding, 2)
-    return iv_dcf
-
 def shorten_description(description):
     lines = description.split('.')
     MAX = 1024
@@ -486,7 +464,7 @@ async def news(ctx, arg):
 async def metrics(ctx, arg):
     '''Fetch key financial metrics for a given ticker symbol.'''
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = arg # db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
