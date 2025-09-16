@@ -323,6 +323,11 @@ async def list(ctx):
 
     for stock_id, threshold, alerted, last_alerted in subscribed_stocks:
         ticker = db.get_ticker_by_id(stock_id)
+
+        # If is alerted, point out
+        if alerted:
+            ticker = f"⚠️ {ticker}"
+        
         embed.add_field(name=ticker, value=f"Notification Threshold: {threshold}%", inline=False)
 
     await ctx.send(embed=embed)
