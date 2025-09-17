@@ -39,6 +39,8 @@ def shorten_description(description):
 
 def round_large_number(number):
     """Format large numbers with suffixes (K, M, B, T)."""
+    if not number: return 0
+
     if number >= 1_000_000_000_000:
         return f"{number / 1_000_000_000_000:.2f}T"
     elif number >= 1_000_000_000:
@@ -78,6 +80,7 @@ async def stock(ctx, arg):
 
     stock = yf.Ticker(ticker)
     info = stock.fast_info
+    print(info)
     price = info.get("lastPrice", None)
     prev_close = info.get("previousClose", None)
     market_cap = round_large_number(info.get("marketCap", 0))
@@ -618,6 +621,83 @@ async def compare(ctx, arg1, arg2, period="1y"):
         await ctx.send(file=file, embed=embed)
     except Exception as e:
         await ctx.send(f"⚠️ Error generating comparison chart: {str(e)}")
+
+# Function to compare stock against s&p 500
+@bot.command()
+async def compare_sp500(ctx, arg, period="1y"):
+    '''Compare historical stock data for a given ticker symbol against S&P 500 index and period (default: 1 year).'''
+
+    ticker = db.get_ticker_by_name(arg)
+    sp500_ticker = "^GSPC"  # Yahoo Finance ticker for S&P 500
+    if not ticker:
+        await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
+        return
+
+    try:
+        stock = yf.Ticker(ticker)
+        sp500 = yf.Ticker(sp500_ticker)
+        hist_stock = stock.history(period=period)
+        hist_sp500 = sp500.history(period=period)
+
+        if hist_stock.empty:
+            await ctx.send(f"❌ No historical data found for **{ticker}** with period `{period}`.")
+            return
+        if hist_sp500.empty:
+            await ctx.send(f"❌ No historical data found for S&P 500 with period `{period}`.")
+            return
+
+        # Prepare data
+        x_stock = mdates.date2num(hist_stock.index.to_pydatetime())
+        x_sp500 = mdates.date2num(hist_sp500.index.to_pydatetime())
+        # Normalize both series to 100 at the start
+        y_stock = (hist_stock["Close"].values / hist_stock["Close"].values[0] - 1) * 100
+        y_sp500 = (hist_sp500["Close"].values / hist_sp500["Close"].values[0] - 1) * 100
+
+        # Create chart
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots(figsize=(9, 4))
+
+        ax.plot(x_stock, y_stock, linewidth=2, label=ticker)
+        ax.plot(x_sp500, y_sp500, linewidth=2, label="S&P 500")
+
+        ax.set_title(f"S&P 500 vs {ticker} - Last {period}", fontsize=14, weight="bold", color="white")
+        ax.set_ylabel("Price (USD)", fontsize=12, color="white")
+        ax.legend()
+
+        # Format x-axis
+        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+        fig.autofmt_xdate(rotation=30)
+
+        # Aesthetics
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("gray")
+        ax.spines["bottom"].set_color("gray")
+        ax.tick_params(axis="x", colors="gray")
+        ax.tick_params(axis="y", colors="gray")
+        ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
+        fig.tight_layout()
+        # Save to buffer
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png", dpi=150)
+        buffer.seek(0)
+        plt.close(fig)
+        # create embed
+        embed = discord.Embed(
+            title=f"📊 {ticker} vs S&P 500 Comparison",
+            description=f"Comparison of **{ticker}** and **S&P 500**",
+            color=0x1f77b4
+        )
+        # Set footer
+        embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+
+        file = discord.File(buffer, filename="chart.png")
+        embed.set_image(url="attachment://chart.png")
+        await ctx.send(file=file, embed=embed)
+    except Exception as e:
+        await ctx.send(f"⚠️ Error generating comparison chart: {str(e)}")
+
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 db.close_connection()
