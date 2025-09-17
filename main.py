@@ -326,7 +326,6 @@ async def list(ctx):
 
         # If is alerted, point out
         if alerted:
-            print(f"33333333333333333333333333333333333333333333333333333333333333333333333333")
             ticker = f"⚠️ {ticker}"
         
         embed.add_field(name=ticker, value=f"Notification Threshold: {threshold}%", inline=False)
@@ -526,6 +525,99 @@ async def metrics(ctx, arg):
     await ctx.send(embed=embed)
 
 
+@bot.command()
+async def compare(ctx, arg1, arg2, period="1y"):
+    '''Compare historical stock data for two given ticker symbols and period (default: 1 month).'''
+
+    ticker1 = db.get_ticker_by_name(arg1)
+    ticker2 = db.get_ticker_by_name(arg2)
+    if not ticker1:
+        await ctx.send(f"❌ Ticker symbol for '{arg1}' not found.")
+        return
+    if not ticker2:
+        await ctx.send(f"❌ Ticker symbol for '{arg2}' not found.")
+        return
+
+    try:
+        stock1 = yf.Ticker(ticker1)
+        stock2 = yf.Ticker(ticker2)
+        hist1 = stock1.history(period=period)
+        hist2 = stock2.history(period=period)
+
+        if hist1.empty:
+            await ctx.send(f"❌ No historical data found for **{ticker1}** with period `{period}`.")
+            return
+        if hist2.empty:
+            await ctx.send(f"❌ No historical data found for **{ticker2}** with period `{period}`.")
+            return
+
+        # Prepare data
+        x1 = mdates.date2num(hist1.index.to_pydatetime())
+        y1 = hist1["Close"].values
+        x2 = mdates.date2num(hist2.index.to_pydatetime())
+        y2 = hist2["Close"].values
+        # Create chart
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots(figsize=(9, 4))
+
+        ax.plot(x1, y1, linewidth=2, label=ticker1)
+        ax.plot(x2, y2, linewidth=2, label=ticker2)
+
+        ax.set_title(f"{ticker1} vs {ticker2} - Last {period}", fontsize=14, weight="bold", color="white")
+        ax.set_ylabel("Price (USD)", fontsize=12, color="white")
+        ax.legend()
+
+        # Format x-axis
+        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+        fig.autofmt_xdate(rotation=30)
+
+        # Aesthetics
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("gray")
+        ax.spines["bottom"].set_color("gray")
+        ax.tick_params(axis="x", colors="gray")
+        ax.tick_params(axis="y", colors="gray")
+        ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
+        fig.tight_layout()
+
+        # Save to buffer
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png", dpi=150)
+        buffer.seek(0)
+        plt.close(fig)
+
+        # create embed
+        embed = discord.Embed(
+            title=f"📊 {ticker1} vs {ticker2} Comparison",
+            description=f"Comparison of **{ticker1}** and **{ticker2}**",
+            color=0x1f77b4
+        )
+        # Set footer
+        embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+        # Compare key metrics
+        info1 = stock1.info
+        info2 = stock2.info
+        market_cap1 = info1.get("marketCap", None)
+        market_cap2 = info2.get("marketCap", None)
+        pe1 = info1.get("trailingPE", None)
+        pe2 = info2.get("trailingPE", None)
+        dividend_yield1 = info1.get("dividendYield", None)
+        dividend_yield2 = info2.get("dividendYield", None)
+        beta1 = info1.get("beta", None)
+        beta2 = info2.get("beta", None)
+        embed.add_field(name="🏦 Market Cap", value=f"{ticker1}: ${round_large_number(market_cap1)}\n{ticker2}: ${round_large_number(market_cap2)}" if market_cap1 and market_cap2 else "N/A", inline=True)
+        embed.add_field(name="📊 Trailing P/E", value=f"{ticker1}: {pe1:.2f}\n{ticker2}: {pe2:.2f}" if pe1 and pe2 else "N/A", inline=True)
+        embed.add_field(name="💰 Dividend Yield", value=f"{ticker1}: {dividend_yield1:.2f}%\n{ticker2}: {dividend_yield2:.2f}%" if dividend_yield1 and dividend_yield2 else "N/A", inline=True)
+        embed.add_field(name="📈 Beta", value=f"{ticker1}: {beta1:.2f}\n{ticker2}: {beta2:.2f}" if beta1 and beta2 else "N/A", inline=True)
+        
+
+        file = discord.File(buffer, filename="chart.png")
+        embed.set_image(url="attachment://chart.png")
+        await ctx.send(file=file, embed=embed)
+    except Exception as e:
+        await ctx.send(f"⚠️ Error generating comparison chart: {str(e)}")
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 db.close_connection()
