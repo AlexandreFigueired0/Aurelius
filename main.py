@@ -403,6 +403,8 @@ async def help(ctx):
     embed.add_field(name="!list", value="List all watched stocks for this server.", inline=False)
     embed.add_field(name="!news <ticker>", value="Fetch latest news articles for a given ticker symbol.", inline=False)
     embed.add_field(name="!metrics <ticker>", value="Fetch key financial metrics for a given ticker symbol.", inline=False)
+    embed.add_field(name="!compare <ticker1> <ticker2> [period]", value="Compare historical stock data for two given ticker symbols and period (default: 1 year).", inline=False)
+    embed.add_field(name="!compare_sp500 <ticker> [period]", value="Compare historical stock data for a given ticker symbol against S&P 500 index and period (default: 1 year).", inline=False)
     embed.add_field(name="!help", value="Show this help information.", inline=False)
 
     await ctx.send(embed=embed)
