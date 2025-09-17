@@ -663,7 +663,7 @@ async def compare_sp500(ctx, arg, period="1y"):
         ax.plot(x_sp500, y_sp500, linewidth=2, label="S&P 500")
 
         ax.set_title(f"S&P 500 vs {ticker} - Last {period}", fontsize=14, weight="bold", color="white")
-        ax.set_ylabel("Price (USD)", fontsize=12, color="white")
+        ax.set_ylabel("Percentage (%)", fontsize=12, color="white")
         ax.legend()
 
         # Format x-axis

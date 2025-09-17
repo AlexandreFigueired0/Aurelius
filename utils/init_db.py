@@ -1,6 +1,9 @@
 import psycopg2
 import pandas as pd
 import os
+from collect_stocks_names import get_ticker_name_dict
+
+
 
 conn = psycopg2.connect(
     dbname=os.getenv("POSTGRES_DB"),
@@ -52,14 +55,10 @@ if count > 0:
 
 else:
     # Fill Stock table with initial data from companies.csv
-    companies = pd.read_csv('companies.csv')
-    companies = companies[['company name', 'ticker']]
-
-    for _, row in companies.iterrows():
-        cursor.execute('''
-        INSERT INTO stock (ticker, name)
-        VALUES (%s, %s)
-        ''', (row['ticker'], row['company name']))
+    companies = get_ticker_name_dict()
+    df = pd.DataFrame(list(companies.items()), columns=['ticker', 'name'])
+    for _, row in df.iterrows():
+        cursor.execute('INSERT INTO stock (ticker, name) VALUES (%s, %s) ON CONFLICT (ticker) DO NOTHING', (row['ticker'], row['name']))
 
 
 
