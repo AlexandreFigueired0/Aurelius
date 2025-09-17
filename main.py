@@ -629,7 +629,7 @@ async def compare(ctx, arg1, arg2, period="1y"):
 async def compare_sp500(ctx, arg, period="1y"):
     '''Compare historical stock data for a given ticker symbol against S&P 500 index and period (default: 1 year).'''
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = arg# db.get_ticker_by_name(arg)
     sp500_ticker = "^GSPC"  # Yahoo Finance ticker for S&P 500
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
@@ -654,6 +654,9 @@ async def compare_sp500(ctx, arg, period="1y"):
         # Normalize both series to 100 at the start
         y_stock = (hist_stock["Close"].values / hist_stock["Close"].values[0] - 1) * 100
         y_sp500 = (hist_sp500["Close"].values / hist_sp500["Close"].values[0] - 1) * 100
+
+        sp_return = round(y_sp500[-1],2)
+        stock_return = round(y_stock[-1],2)
 
         # Create chart
         plt.style.use("dark_background")
@@ -693,6 +696,9 @@ async def compare_sp500(ctx, arg, period="1y"):
         )
         # Set footer
         embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+        # Compare returns
+        embed.add_field(name="S&P 500 Return", value=f"{sp_return}%", inline=True)
+        embed.add_field(name=f"{ticker} Return", value=f"{stock_return}%", inline=True)
 
         file = discord.File(buffer, filename="chart.png")
         embed.set_image(url="attachment://chart.png")
