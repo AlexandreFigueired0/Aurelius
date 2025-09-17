@@ -629,7 +629,7 @@ async def compare(ctx, arg1, arg2, period="1y"):
 async def compare_sp500(ctx, arg, period="1y"):
     '''Compare historical stock data for a given ticker symbol against S&P 500 index and period (default: 1 year).'''
 
-    ticker = arg# db.get_ticker_by_name(arg)
+    ticker = db.get_ticker_by_name(arg)
     sp500_ticker = "^GSPC"  # Yahoo Finance ticker for S&P 500
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
