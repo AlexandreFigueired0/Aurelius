@@ -603,13 +603,13 @@ async def compare(ctx, arg1, arg2, period="1y"):
         market_cap2 = info2.get("marketCap", None)
         pe1 = info1.get("trailingPE", None)
         pe2 = info2.get("trailingPE", None)
-        dividend_yield1 = info1.get("dividendYield", None)
-        dividend_yield2 = info2.get("dividendYield", None)
+        dividend_yield1 = info1.get("dividendYield", "N/A")
+        dividend_yield2 = info2.get("dividendYield", "N/A")
         beta1 = info1.get("beta", None)
         beta2 = info2.get("beta", None)
         embed.add_field(name="🏦 Market Cap", value=f"{ticker1}: ${round_large_number(market_cap1)}\n{ticker2}: ${round_large_number(market_cap2)}" if market_cap1 and market_cap2 else "N/A", inline=True)
         embed.add_field(name="📊 Trailing P/E", value=f"{ticker1}: {pe1:.2f}\n{ticker2}: {pe2:.2f}" if pe1 and pe2 else "N/A", inline=True)
-        embed.add_field(name="💰 Dividend Yield", value=f"{ticker1}: {dividend_yield1:.2f}%\n{ticker2}: {dividend_yield2:.2f}%" if dividend_yield1 and dividend_yield2 else "N/A", inline=True)
+        embed.add_field(name="💰 Dividend Yield", value=f"{ticker1}: {dividend_yield1:.2f}%\n{ticker2}: {dividend_yield2:.2f}%", inline=True)
         embed.add_field(name="📈 Beta", value=f"{ticker1}: {beta1:.2f}\n{ticker2}: {beta2:.2f}" if beta1 and beta2 else "N/A", inline=True)
         
 
