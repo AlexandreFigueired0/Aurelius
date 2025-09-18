@@ -25,6 +25,54 @@ NEWS_PER_PAGE = 5
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
 
+def build_plot( data: list , title: str, x_label: str, y_label: str, line_labels:list, line_colors: list):
+    ''' Build a matplotlib plot from given data'''
+    # Create chart
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots(figsize=(9, 4))
+    index = 0
+
+    ax.set_title(title, fontsize=14, weight="bold", color="white")
+    ax.set_ylabel(y_label, fontsize=12, color="white")
+    ax.set_xlabel(x_label, fontsize=12, color="white")
+    y_min = min([min(y) for x,y in data])
+    for x,y in data:
+        line_color = line_colors[index]
+        ax.plot(x, y, color=line_color, linewidth=2, label=line_labels[index])
+        ax.fill_between(x, y, y_min, color=line_color, alpha=0.1)
+        index += 1
+
+    if len(data) > 1:
+        ax.legend()
+    # Format x-axis
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+    fig.autofmt_xdate(rotation=30)
+
+    # Aesthetics
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("gray")
+    ax.spines["bottom"].set_color("gray")
+    ax.tick_params(axis="x", colors="gray")
+    ax.tick_params(axis="y", colors="gray")
+    ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
+
+    fig.tight_layout()
+
+    # Save to buffer
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", dpi=150)
+    buffer.seek(0)
+    plt.close(fig)
+
+    return buffer
+
+def convert_to_eur(amount):
+    ''' Convert USD to EUR using yfinance exchange rate '''
+    exchange_rate = yf.Ticker("USDEUR=X").fast_info['lastPrice']
+    return amount * exchange_rate
+
 def shorten_description(description):
     lines = description.split('.')
     MAX = 1024
@@ -80,7 +128,6 @@ async def stock(ctx, arg):
 
     stock = yf.Ticker(ticker)
     info = stock.fast_info
-    print(info)
     price = info.get("lastPrice", None)
     prev_close = info.get("previousClose", None)
     market_cap = round_large_number(info.get("marketCap", 0))
@@ -94,71 +141,23 @@ async def stock(ctx, arg):
         color=discord.Color.green() if percent_change and percent_change >= 0 else discord.Color.red()
     )
 
-    if price:
-        embed.add_field(name="💵 Price", value=f"{price:.2f} {currency}", inline=True)
-    if percent_change is not None:
-        embed.add_field(name="📈 Change", value=f"{percent_change:.2f}%", inline=True)
-    if market_cap:
-        embed.add_field(name="🏦 Market Cap", value=f"${market_cap}", inline=True)
-
+    embed.add_field(name="💵 Price", value=f"{price:.2f} {currency}", inline=True)
+    embed.add_field(name="📈 Change", value=f"{percent_change:.2f}%", inline=True)
+    embed.add_field(name="🏦 Market Cap", value=f"${market_cap}", inline=True)
     embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
 
-    # --- Generate a price chart (last 1 month) ---
     hist = stock.history(period="1mo")
-    if not hist.empty:
-        # Modern style
-        plt.style.use("dark_background")
-        fig, ax = plt.subplots(figsize=(9, 4))
+    if hist.empty:
+        await ctx.send(f"❌ No historical data found for **{ticker}** with period `{period}`.")
+        return
 
-
-        # Plot line
-        line_color="#1f77b4"
-        x = mdates.date2num(hist.index.to_pydatetime())
-        y = hist["Close"].values
-        ax.plot(x, y, color=line_color, linewidth=2)
-        ax.fill_between(x, y, y.min(), color=line_color, alpha=0.1)
-
-        # Title & labels
-        ax.set_title(f"{ticker} - Last 1 Month", fontsize=14, weight="bold")
-        ax.set_xlabel("Date", fontsize=12)
-        ax.set_ylabel(f"Price ({currency})", fontsize=12)
-
-        # Format dates
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-        fig.autofmt_xdate(rotation=30)
-
-        # Clean up chart aesthetics
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("gray")
-        ax.spines["bottom"].set_color("gray")
-        ax.tick_params(axis="x", colors="gray")
-        ax.tick_params(axis="y", colors="gray")
-
-        # Remove top/right borders for a modern look
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-        # Grid (subtle)
-        ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
-
-        # Tight layout
-        fig.tight_layout()
-
-        # Save to buffer
-        buffer = BytesIO()
-        plt.savefig(buffer, format="png", dpi=150)
-        buffer.seek(0)
-        plt.close(fig)
-
-        file = discord.File(buffer, filename=f"{ticker}_chart.png")
-        embed.set_image(url=f"attachment://{ticker}_chart.png")
-
-        await ctx.send(file=file, embed=embed)
-    else:
-        await ctx.send(embed=embed)
-
+    line_color="#1f77b4"
+    x = mdates.date2num(hist.index.to_pydatetime())
+    y = hist["Close"].values
+    buffer = build_plot([(x,y)], f"{ticker} - Last 1 Month", "Date", "Price (USD)", [ticker], [line_color])
+    file = discord.File(buffer, filename="chart.png")
+    embed.set_image(url="attachment://chart.png")
+    await ctx.send(file=file, embed=embed)
 
 @bot.command()
 async def info(ctx, arg):
@@ -220,46 +219,13 @@ async def chart(ctx, arg, period="1mo"):
             await ctx.send(f"❌ No historical data found for **{ticker}** with period `{period}`.")
             return
 
-        # Prepare data
+
+        line_color="#1f77b4"
         x = mdates.date2num(hist.index.to_pydatetime())
         y = hist["Close"].values
-        start_price, end_price = y[0], y[-1]
-        line_color = "#1f77b4"
+        buffer = build_plot([(x,y)], f"{ticker} - Last 1 Month", "Date", "Price (USD)", [ticker], [line_color])
+        file = discord.File(buffer, filename="chart.png")
 
-        # Create chart
-        plt.style.use("dark_background")
-        fig, ax = plt.subplots(figsize=(9, 4))
-
-        ax.plot(x, y, color=line_color, linewidth=2)
-        ax.fill_between(x, y, y.min(), color=line_color, alpha=0.1)
-
-        ax.set_title(f"{ticker} - Last {period}", fontsize=14, weight="bold", color="white")
-        ax.set_ylabel("Price (USD)", fontsize=12, color="white")
-
-        # Format x-axis
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-        fig.autofmt_xdate(rotation=30)
-
-        # Aesthetics
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("gray")
-        ax.spines["bottom"].set_color("gray")
-        ax.tick_params(axis="x", colors="gray")
-        ax.tick_params(axis="y", colors="gray")
-        ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
-
-        fig.tight_layout()
-
-        # Save to buffer
-        buffer = BytesIO()
-        plt.savefig(buffer, format="png", dpi=150)
-        buffer.seek(0)
-        plt.close(fig)
-
-        # Send chart to Discord
-        file = discord.File(buffer, filename=f"{ticker}_chart.png")
         await ctx.send(file=file)
 
     except Exception as e:
@@ -329,7 +295,7 @@ async def list(ctx):
 
         # If is alerted, point out
         if alerted:
-            ticker = f"⚠️ {ticker}"
+            ticker = f"🚨 {ticker}"
         
         embed.add_field(name=ticker, value=f"Notification Threshold: {threshold}%", inline=False)
 
@@ -342,35 +308,10 @@ async def check_stock_percent_changes():
     print("Checking stock price changes...")
 
     for guild in bot.guilds:
-        embed = discord.Embed(
-            title="🔔 Stock Price Alert",
-            description=f"The following stocks have crossed their notification thresholds:",
-            color=discord.Color.yellow()
-        )
-        embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
         server_id = guild.id
         subscribed_stocks = db.get_subscribed_stocks(server_id)
-        count = 0
 
-        for stock_id, threshold, alerted, last_alerted in subscribed_stocks:
-            ticker = db.get_ticker_by_id(stock_id)
-            stock = yf.Ticker(ticker)
-            info = stock.fast_info
-            price = info.get("lastPrice", None)
-            prev_close = info.get("previousClose", None)
-
-            percent_change = round(((price - prev_close) / prev_close) * 100, 2)
-            if abs(percent_change) >= threshold:
-                if not alerted:
-                    embed.add_field(name=ticker, value=f"Price: {price:.2f} USD\nChange: {percent_change:.2f}%", inline=False)
-                    count += 1
-                    db.mark_stock_as_alerted(server_id, ticker)
-            else: # Reset alert state if price goes back within threshold
-                if alerted:
-                    db.reset_stock_alert(server_id, ticker)
-
-        channel = discord.utils.get(guild.text_channels, name=STOCKS_ALERT_CHANNEL_NAME)
-        # Send message to stock alert channel, if channel does not exist, create it
+        # If stock alert channel does not exist, create it
         if not channel:
             # Create read-only channel for stock alerts
             overwrites = {
@@ -382,8 +323,31 @@ async def check_stock_percent_changes():
             await channel.send("📈 Stock price alerts are now active!")
             print(f"Created channel: {STOCKS_ALERT_CHANNEL_NAME} in server: {guild.name} ({guild.id})")
 
-        if count > 0:
-            await channel.send(embed=embed)
+        for stock_id, threshold, alerted, last_alerted in subscribed_stocks:
+            ticker = db.get_ticker_by_id(stock_id)
+            stock = yf.Ticker(ticker)
+            info = stock.fast_info
+            price = info.get("lastPrice", None)
+            prev_close = info.get("previousClose", None)
+
+            percent_change = round(((price - prev_close) / prev_close) * 100, 2)
+            if abs(percent_change) >= threshold:
+                if not alerted:
+                    embed = discord.Embed(
+                        title=f"🚨 **{ticker}** Price Alert!",
+                        description=f"The price of **{ticker}** has changed by {percent_change:.2f}% which is above your set threshold of {threshold}%.",
+                        color=discord.Color.green() if percent_change >= 0 else discord.Color.red()
+                    )
+                    embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
+                    embed.add_field(name=ticker, value=f"Price: {price:.2f} USD\nChange: {percent_change:.2f}%", inline=False)
+                    cur_message = await channel.send(embed=embed)
+                    db.mark_stock_as_alerted(server_id, ticker)
+            else: # Reset alert state if price goes back within threshold
+                if alerted:
+                    db.reset_stock_alert(server_id, ticker)
+
+        channel = discord.utils.get(guild.text_channels, name=STOCKS_ALERT_CHANNEL_NAME)
+
 
 @bot.command()
 async def help(ctx):
@@ -507,9 +471,6 @@ async def metrics(ctx, arg):
     total_pv = 0
     terminal_growth = 0.03
 
-    # iv_simple = simple_iv_calculation(ev, shares_outstanding)
-    # iv_dcf = dcf_iv_calculation(fcf, revenue_growth, shares_outstanding, years, discount_rate, terminal_growth)
-
     # --- Create an embed dashboard ---
     embed = discord.Embed(
         title=f"📊 {ticker} Key Financial Metrics",
@@ -534,8 +495,8 @@ async def metrics(ctx, arg):
 async def compare(ctx, arg1, arg2, period="1y"):
     '''Compare historical stock data for two given ticker symbols and period (default: 1 month).'''
 
-    ticker1 = db.get_ticker_by_name(arg1)
-    ticker2 = db.get_ticker_by_name(arg2)
+    ticker1 = arg1#db.get_ticker_by_name(arg1)
+    ticker2 = arg2#db.get_ticker_by_name(arg2)
     if not ticker1:
         await ctx.send(f"❌ Ticker symbol for '{arg1}' not found.")
         return
@@ -561,38 +522,8 @@ async def compare(ctx, arg1, arg2, period="1y"):
         y1 = hist1["Close"].values
         x2 = mdates.date2num(hist2.index.to_pydatetime())
         y2 = hist2["Close"].values
-        # Create chart
-        plt.style.use("dark_background")
-        fig, ax = plt.subplots(figsize=(9, 4))
-
-        ax.plot(x1, y1, linewidth=2, label=ticker1)
-        ax.plot(x2, y2, linewidth=2, label=ticker2)
-
-        ax.set_title(f"{ticker1} vs {ticker2} - Last {period}", fontsize=14, weight="bold", color="white")
-        ax.set_ylabel("Price (USD)", fontsize=12, color="white")
-        ax.legend()
-
-        # Format x-axis
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-        fig.autofmt_xdate(rotation=30)
-
-        # Aesthetics
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("gray")
-        ax.spines["bottom"].set_color("gray")
-        ax.tick_params(axis="x", colors="gray")
-        ax.tick_params(axis="y", colors="gray")
-        ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
-        fig.tight_layout()
-
-        # Save to buffer
-        buffer = BytesIO()
-        plt.savefig(buffer, format="png", dpi=150)
-        buffer.seek(0)
-        plt.close(fig)
-
+        buffer = build_plot([(x1, y1), (x2, y2)], 
+        f"{ticker1} vs {ticker2} - Last {period}", "Date", "Price (USD)", [ticker1, ticker2], ["#1f77b4", "#ff7f0e"])
         # create embed
         embed = discord.Embed(
             title=f"📊 {ticker1} vs {ticker2} Comparison",
@@ -658,37 +589,6 @@ async def compare_sp500(ctx, arg, period="1y"):
         sp_return = round(y_sp500[-1],2)
         stock_return = round(y_stock[-1],2)
 
-        # Create chart
-        plt.style.use("dark_background")
-        fig, ax = plt.subplots(figsize=(9, 4))
-
-        ax.plot(x_stock, y_stock, linewidth=2, label=ticker)
-        ax.plot(x_sp500, y_sp500, linewidth=2, label="S&P 500")
-
-        ax.set_title(f"S&P 500 vs {ticker} - Last {period}", fontsize=14, weight="bold", color="white")
-        ax.set_ylabel("Percentage (%)", fontsize=12, color="white")
-        ax.legend()
-
-        # Format x-axis
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-        fig.autofmt_xdate(rotation=30)
-
-        # Aesthetics
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("gray")
-        ax.spines["bottom"].set_color("gray")
-        ax.tick_params(axis="x", colors="gray")
-        ax.tick_params(axis="y", colors="gray")
-        ax.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.3)
-        fig.tight_layout()
-        # Save to buffer
-        buffer = BytesIO()
-        plt.savefig(buffer, format="png", dpi=150)
-        buffer.seek(0)
-        plt.close(fig)
-        # create embed
         embed = discord.Embed(
             title=f"📊 {ticker} vs S&P 500 Comparison",
             description=f"Comparison of **{ticker}** and **S&P 500**",
@@ -699,7 +599,8 @@ async def compare_sp500(ctx, arg, period="1y"):
         # Compare returns
         embed.add_field(name="S&P 500 Return", value=f"{sp_return}%", inline=True)
         embed.add_field(name=f"{ticker} Return", value=f"{stock_return}%", inline=True)
-
+        buffer = build_plot([(x_stock, y_stock), (x_sp500, y_sp500)], 
+        f"{ticker} vs S&P 500 - Last {period}", "Date", "Return (%)", [ticker, "S&P 500"], ["#1f77b4", "#ff7f0e"])
         file = discord.File(buffer, filename="chart.png")
         embed.set_image(url="attachment://chart.png")
         await ctx.send(file=file, embed=embed)
