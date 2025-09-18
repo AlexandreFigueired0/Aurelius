@@ -2,15 +2,15 @@ import psycopg2
 import pandas as pd
 import os
 
-# conn = psycopg2.connect(
-#     dbname=os.getenv("POSTGRES_DB"),
-#     user=os.getenv("POSTGRES_USER"),
-#     password=os.getenv("POSTGRES_PASSWORD"),
-#     host=os.getenv("POSTGRES_HOST"),
-#     port='5432'
-# )
+conn = psycopg2.connect(
+    dbname=os.getenv("POSTGRES_DB"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD"),
+    host=os.getenv("POSTGRES_HOST"),
+    port='5432'
+)
 
-conn = None
+# conn = None
 
 def get_ticker_by_name(company_name):
     cursor = conn.cursor()

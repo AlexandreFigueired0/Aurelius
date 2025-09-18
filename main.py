@@ -47,7 +47,7 @@ async def hello(ctx):
 async def stock(ctx, arg):
     '''Fetch live stock  price, change %, market cap for a given ticker symbol.'''
 
-    ticker = arg# db.get_ticker_by_name(arg)
+    ticker = db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
