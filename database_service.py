@@ -147,13 +147,49 @@ def insert_server_plan(discord_server_id, plan_name):
     plan = get_plan_by_name(plan_name)
     plan_id = plan[0] if plan else None
 
-    # Check if the server already has this plan
-    cursor.execute('SELECT id FROM server_plan WHERE server_id = %s AND plan_id = %s', (server_id, plan_id))
+    if not plan_id:
+        cursor.close()
+        raise ValueError("Plan not found")
+    # Check if server already has a plan
+    cursor.execute('SELECT id FROM server_plan WHERE server_id = %s', (server_id,))
     if cursor.fetchone():
         cursor.close()
-        return  # Server already has this plan
-
+        raise ValueError("Server already has a plan")
     cursor.execute('INSERT INTO server_plan (server_id, plan_id) VALUES (%s, %s)', (server_id, plan_id))
+    conn.commit()
+    cursor.close()
+
+def get_server_plan(discord_server_id):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+
+    cursor.execute('''
+        SELECT p.plan_name, p.price, sp.start_date, sp.end_date
+        FROM server_plan sp
+        JOIN plan p ON sp.plan_id = p.id
+        WHERE sp.server_id = %s
+    ''', (server_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    return result  # Returns (plan_name, price, start_date, end_date) or None if not found
+
+def update_server_plan(discord_server_id, new_plan_name):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    plan = get_plan_by_name(new_plan_name)
+    plan_id = plan[0] if plan else None
+
+    if not plan_id:
+        cursor.close()
+        raise ValueError("Plan not found")
+    
+    # Check if server has a plan
+    cursor.execute('SELECT id FROM server_plan WHERE server_id = %s', (server_id,))
+    if not cursor.fetchone():
+        cursor.close()
+        raise ValueError("Server does not have a plan to update")
+    
+    cursor.execute('UPDATE server_plan SET plan_id = %s, start_date = NOW(), end_date = NULL WHERE server_id = %s', (plan_id, server_id))
     conn.commit()
     cursor.close()
 
