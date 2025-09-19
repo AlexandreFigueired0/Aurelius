@@ -181,7 +181,7 @@ async def watch(ctx, arg, threshold: float = 10.0):
     # Check if server has reached the maximum number of watched stocks
     plan = db.get_server_plan(server_id)
     max_stocks = FREE_PLAN_MAX_WATCHED_STOCKS if not plan or plan[1] == "Free" else PRO_PLAN_MAX_WATCHED_STOCKS
-    if len(subscribed_stocks) >= max_stocks:
+    if len(subscribed_stocks) >= int(max_stocks):
         await ctx.send(f"❌ You have reached the maximum number of watched stocks ({max_stocks}) for your current plan ({plan[1] if plan else 'Free'}). Please upgrade your plan to watch more stocks.")
         return
 
