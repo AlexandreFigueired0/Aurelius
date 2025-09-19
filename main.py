@@ -179,7 +179,7 @@ async def watch(ctx, arg, threshold: float = 10.0):
     subscribed_stocks = db.get_subscribed_stocks(server_id)
 
     # Check if server has reached the maximum number of watched stocks
-    plan = db.get_active_plan_for_server(server_id)
+    plan = db.get_server_plan(server_id)
     max_stocks = FREE_PLAN_MAX_WATCHED_STOCKS if not plan or plan[1] == "Free" else PRO_PLAN_MAX_WATCHED_STOCKS
     if len(subscribed_stocks) >= max_stocks:
         await ctx.send(f"❌ You have reached the maximum number of watched stocks ({max_stocks}) for your current plan ({plan[1] if plan else 'Free'}). Please upgrade your plan to watch more stocks.")
@@ -439,7 +439,7 @@ async def metrics(ctx, arg):
 
     # If server has PRO plan, show advanced metrics
     server_id = ctx.message.guild.id
-    plan = db.get_active_plan_for_server(server_id)
+    plan = db.get_server_plan(server_id)
     if plan and plan[1] == "PRO":
         embed.add_field(name="🎯 Target Price (High)", value=f"${target_high:,.2f}" if target_high else "N/A", inline=True)
         embed.add_field(name="🎯 Target Price (Low)", value=f"${target_low:,.2f}" if target_low else "N/A", inline=True)
@@ -459,7 +459,7 @@ async def compare(ctx, arg1, arg2, period="1y"):
 
     # Check if server has a paid plan
     server_id = ctx.message.guild.id
-    plan = db.get_active_plan_for_server(server_id)
+    plan = db.get_server_plan(server_id)
     if not plan or plan[1] != "PRO":
         await ctx.send("❌ This command is available for PRO plan subscribers only. Please upgrade your plan to access this feature.")
         return
@@ -531,7 +531,7 @@ async def compare_sp500(ctx, arg, period="1y"):
 
     # Check if server has a paid plan
     server_id = ctx.message.guild.id
-    plan = db.get_active_plan_for_server(server_id)
+    plan = db.get_server_plan(server_id)
     if not plan or plan[1] != "PRO":
         await ctx.send("❌ This command is available for PRO plan subscribers only. Please upgrade your plan to access this feature.")
         return
