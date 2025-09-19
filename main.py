@@ -201,6 +201,20 @@ async def unwatch(ctx, arg):
     await ctx.send(f"🗑️ Stopped watching **{ticker}**.")
 
 @bot.command()
+async def unwatchall(ctx):
+    '''Stop watching all stocks.'''
+    server_id = ctx.message.guild.id
+    stocks_ids = db.delete_all_server_stocks(server_id)
+    embed = discord.Embed(
+        title="🗑️ Unwatched All Stocks",
+    )
+    for stock_id in stocks_ids:
+        ticker = db.get_ticker_by_id(stock_id)
+        embed.add_field(name=ticker, value="Unwatched", inline=False)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def list(ctx):
     '''List all watched stocks for this server.'''
     server_id = ctx.message.guild.id

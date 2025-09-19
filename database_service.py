@@ -106,6 +106,15 @@ def delete_server_stock(discord_server_id, ticker):
     conn.commit()
     cursor.close()
 
+def delete_server_stocks_from_server(discord_server_id):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+
+    cursor.execute('DELETE FROM subscribed_stock WHERE server_id = %s RETURNING stock_id', (server_id,))
+    stocks = cursor.fetchall()
+    conn.commit()
+    cursor.close()
+    return stocks
 
 def mark_stock_as_alerted(discord_server_id, ticker):
     cursor = conn.cursor()
