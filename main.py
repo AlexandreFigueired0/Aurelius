@@ -204,7 +204,7 @@ async def unwatch(ctx, arg):
 async def unwatchall(ctx):
     '''Stop watching all stocks.'''
     server_id = ctx.message.guild.id
-    stocks_ids = db.delete_all_server_stocks(server_id)
+    stocks_ids = db.delete_server_stocks_from_server(server_id)
     embed = discord.Embed(
         title="🗑️ Unwatched All Stocks",
     )
