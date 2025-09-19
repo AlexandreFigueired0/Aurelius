@@ -134,5 +134,28 @@ def reset_stock_alert(discord_server_id, ticker):
     conn.commit()
     cursor.close()
 
+def get_plan_by_name(plan_name):
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, price FROM plan WHERE plan_name = %s', (plan_name,))
+    result = cursor.fetchone()
+    cursor.close()
+    return result  # Returns (id, price) or None if not found
+
+def insert_server_plan(discord_server_id, plan_name):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    plan = get_plan_by_name(plan_name)
+    plan_id = plan[0] if plan else None
+
+    # Check if the server already has this plan
+    cursor.execute('SELECT id FROM server_plan WHERE server_id = %s AND plan_id = %s', (server_id, plan_id))
+    if cursor.fetchone():
+        cursor.close()
+        return  # Server already has this plan
+
+    cursor.execute('INSERT INTO server_plan (server_id, plan_id) VALUES (%s, %s)', (server_id, plan_id))
+    conn.commit()
+    cursor.close()
+
 def close_connection():
     conn.close()

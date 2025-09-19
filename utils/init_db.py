@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS server_plan (
     plan_id INTEGER REFERENCES plan(id) ON DELETE CASCADE,
     start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_date TIMESTAMP NULL,
-    UNIQUE (server_id, plan_id)
+    UNIQUE (server_id)
 );
 ''')
 
