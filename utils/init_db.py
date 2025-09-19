@@ -46,6 +46,24 @@ CREATE TABLE IF NOT EXISTS subscribed_stock (
 );
 ''')
 
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS plan (
+    id SERIAL PRIMARY KEY,
+    plan_name VARCHAR(50) UNIQUE NOT NULL,
+    price DECIMAL(6,2) NOT NULL,
+);
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS server_plan (
+    id SERIAL PRIMARY KEY,
+    server_id INTEGER REFERENCES server(id) ON DELETE CASCADE,
+    plan_id INTEGER REFERENCES plan(id) ON DELETE CASCADE,
+    start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_date TIMESTAMP NULL,
+    UNIQUE (server_id, plan_id)
+);
+''')
 
 # Check if stock table is empty before inserting initial data
 cursor.execute('SELECT COUNT(*) FROM stock')
@@ -60,6 +78,18 @@ else:
     for _, row in df.iterrows():
         cursor.execute('INSERT INTO stock (ticker, name) VALUES (%s, %s) ON CONFLICT (ticker) DO NOTHING', (row['ticker'], row['name']))
 
+# Fill Plan table with initial plans
+cursor.execute('SELECT COUNT(*) FROM plan')
+count = cursor.fetchone()[0]
+if count == 0:
+    plans = [
+        ('Free', 0.00),
+        ('Pro', 4.99),
+    ]
+    for plan_name, price in plans:
+        cursor.execute('INSERT INTO plan (plan_name, price) VALUES (%s, %s) ON CONFLICT (plan_name) DO NOTHING', (plan_name, price))
+else:
+    print("Plan table already has data. Skipping initial data insertion.")
 
 
 
