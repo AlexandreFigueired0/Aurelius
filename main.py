@@ -421,8 +421,8 @@ async def metrics(ctx, arg):
 async def compare(ctx, arg1, arg2, period="1y"):
     '''Compare historical stock data for two given ticker symbols and period (default: 1 month).'''
 
-    ticker1 = arg1#db.get_ticker_by_name(arg1)
-    ticker2 = arg2#db.get_ticker_by_name(arg2)
+    ticker1 = db.get_ticker_by_name(arg1)
+    ticker2 = db.get_ticker_by_name(arg2)
     if not ticker1:
         await ctx.send(f"❌ Ticker symbol for '{arg1}' not found.")
         return
