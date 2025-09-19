@@ -44,7 +44,7 @@ async def hello(ctx):
 
 
 @bot.command()
-async def stock(ctx, arg):
+async def stock(ctx, arg, period="1mo"):
     '''Fetch live stock  price, change %, market cap for a given ticker symbol.'''
 
     ticker = db.get_ticker_by_name(arg)
@@ -72,7 +72,7 @@ async def stock(ctx, arg):
     embed.add_field(name="🏦 Market Cap", value=f"${market_cap}", inline=True)
     embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
 
-    hist = stock.history(period="1mo")
+    hist = stock.history(period=period)
     if hist.empty:
         await ctx.send(f"❌ No historical data found for **{ticker}** with period `{period}`.")
         return
@@ -299,7 +299,7 @@ async def help(ctx):
     )
 
     embed.add_field(name="!hello", value="Greet the bot.", inline=False)
-    embed.add_field(name="!stock <ticker>", value="Fetch live stock price, change %, market cap for a given ticker symbol.", inline=False)
+    embed.add_field(name="!stock <ticker> [period]", value="Fetch live stock price, change %, market cap for a given ticker symbol and period (default: 1 month).", inline=False)
     embed.add_field(name="!info <ticker>", value="Fetch company information (description, sector, CEO, etc.) for a given ticker symbol.", inline=False)
     embed.add_field(name="!chart <ticker> [period]", value="Fetch historical stock data for a given ticker symbol and period (default: 1 month).", inline=False)
     embed.add_field(name="!watch <ticker> [threshold]", value="Watch a stock and get notified when its price changes by a certain percentage (default: 10%).", inline=False)

@@ -17,7 +17,7 @@ See source code in [main.py](main.py), DB layer in [database_service.py](databas
 
 - Discord commands:
   - `!hello` — basic greeting
-  - `!stock <ticker|company>` — live price, % change, market cap + mini chart
+  - `!stock <ticker|company> [period]` — live price, % change, market cap + mini chart, for a given time period (default 1mo)
   - `!info <ticker|company>` — company description, sector, industry, CEO
   - `!chart <ticker|company> [period]` — historical chart (default 1mo)
   - `!news <ticker|company>` — latest news with paginated embeds
