@@ -23,7 +23,7 @@ bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
 NEWS_PER_PAGE = 5
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
-FREE_FREE_PLAN_MAX_WATCHED_STOCKS=os.getenv("FREE_PLAN_MAX_WATCHED_STOCKS", 5)
+FREE_PLAN_MAX_WATCHED_STOCKS=os.getenv("FREE_PLAN_MAX_WATCHED_STOCKS", 5)
 PRO_PLAN_MAX_WATCHED_STOCKS=os.getenv("PRO_PLAN_MAX_WATCHED_STOCKS", 50)
 
 
