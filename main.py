@@ -434,12 +434,20 @@ async def metrics(ctx, arg):
     embed.add_field(name="📊 Trailing P/E", value=f"{trailing_pe:.2f}" if trailing_pe else "N/A", inline=True)
     embed.add_field(name="🔮 Forward P/E", value=f"{forward_pe:.2f}" if forward_pe else "N/A", inline=True)
     embed.add_field(name="💰 Dividend Yield", value=f"{dividend_yield:.2f}%" if dividend_yield else "N/A", inline=True)
-    embed.add_field(name="🏦 Price to Book", value=f"{price_to_book:.2f}" if price_to_book else "N/A", inline=True)
-    embed.add_field(name="🎯 Target Price (High)", value=f"${target_high:,.2f}" if target_high else "N/A", inline=True)
-    embed.add_field(name="🎯 Target Price (Low)", value=f"${target_low:,.2f}" if target_low else "N/A", inline=True)
-    embed.add_field(name="🎯 Target Price (Mean)", value=f"${target_mean:,.2f}" if target_mean else "N/A", inline=True)
     embed.add_field(name="📈 Beta", value=f"{beta:.2f}" if beta else "N/A", inline=True)
-    embed.add_field(name="📝 Recommendation", value=recommendation.capitalize() if recommendation else "N/A", inline=True)
+    embed.add_field(name="🏦 Price to Book", value=f"{price_to_book:.2f}" if price_to_book else "N/A", inline=True)
+
+    # If server has PRO plan, show advanced metrics
+    server_id = ctx.message.guild.id
+    plan = db.get_active_plan_for_server(server_id)
+    if plan and plan[1] == "PRO":
+        embed.add_field(name="🎯 Target Price (High)", value=f"${target_high:,.2f}" if target_high else "N/A", inline=True)
+        embed.add_field(name="🎯 Target Price (Low)", value=f"${target_low:,.2f}" if target_low else "N/A", inline=True)
+        embed.add_field(name="🎯 Target Price (Mean)", value=f"${target_mean:,.2f}" if target_mean else "N/A", inline=True)
+        embed.add_field(name="📝 Recommendation", value=recommendation.capitalize() if recommendation else "N/A", inline=True)
+        embed.add_field(name="📈 Earnings Growth (5Y)", value=f"{earnings_growth:.2%}" if earnings_growth else "N/A", inline=True)
+        embed.add_field(name="📊 Revenue Growth (5Y)", value=f"{revenue_growth:.2%}" if revenue_growth else "N/A", inline=True)
+        embed.add_field(name="💵 Free Cash Flow (FCF)", value=f"${round_large_number(fcf)}" if fcf else "N/A", inline=True)
 
     embed.set_footer(text="Data provided by Yahoo Finance (yfinance)")
     await ctx.send(embed=embed)
