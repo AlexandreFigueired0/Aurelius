@@ -23,6 +23,8 @@ bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
 NEWS_PER_PAGE = 5
 
 STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
+FREE_FREE_PLAN_MAX_WATCHED_STOCKS=os.getenv("FREE_PLAN_MAX_WATCHED_STOCKS", 5)
+PRO_PLAN_MAX_WATCHED_STOCKS=os.getenv("PRO_PLAN_MAX_WATCHED_STOCKS", 50)
 
 
 
@@ -34,9 +36,14 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author == bot.user: return # Do not answer yourself
-
-    
     await bot.process_commands(message)
+    
+@bot.event
+def on_guild_join(guild):
+    # When the bot joins a new server, ensure the server is in the database
+    server_id = guild.id
+    server_name = guild.name
+    db.insert_server(server_id, server_name)
 
 @bot.command()
 async def hello(ctx):
@@ -160,18 +167,25 @@ async def chart(ctx, arg, period="1mo"):
 @bot.command()
 async def watch(ctx, arg, threshold: float = 10.0):
     '''Watch a stock and get notified when its price changes by a certain percentage (default: 10%).'''
+
     
     #check if server is stored in db, if not add it
     server_id = ctx.message.guild.id
-    server_name = ctx.message.guild.name
-    db.insert_server(server_id, server_name)
     ticker = db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
 
-    # Check if stock is already being watched
     subscribed_stocks = db.get_subscribed_stocks(server_id)
+
+    # Check if server has reached the maximum number of watched stocks
+    plan = db.get_active_plan_for_server(server_id)
+    max_stocks = FREE_PLAN_MAX_WATCHED_STOCKS if not plan or plan[1] == "Free" else PRO_PLAN_MAX_WATCHED_STOCKS
+    if len(subscribed_stocks) >= max_stocks:
+        await ctx.send(f"❌ You have reached the maximum number of watched stocks ({max_stocks}) for your current plan ({plan[1] if plan else 'Free'}). Please upgrade your plan to watch more stocks.")
+        return
+
+    # Check if stock is already being watched
     for stock_id, change_percentage, alerted, last_alerted in subscribed_stocks:
         existing_ticker = db.get_ticker_by_id(stock_id)
 
@@ -433,7 +447,14 @@ async def metrics(ctx, arg):
 
 @bot.command()
 async def compare(ctx, arg1, arg2, period="1y"):
-    '''Compare historical stock data for two given ticker symbols and period (default: 1 month).'''
+    '''PAID COMMAND. Compare historical stock data for two given ticker symbols and period (default: 1 month).'''
+
+    # Check if server has a paid plan
+    server_id = ctx.message.guild.id
+    plan = db.get_active_plan_for_server(server_id)
+    if not plan or plan[1] != "PRO":
+        await ctx.send("❌ This command is available for PRO plan subscribers only. Please upgrade your plan to access this feature.")
+        return
 
     ticker1 = db.get_ticker_by_name(arg1)
     ticker2 = db.get_ticker_by_name(arg2)
@@ -498,7 +519,14 @@ async def compare(ctx, arg1, arg2, period="1y"):
 # Function to compare stock against s&p 500
 @bot.command()
 async def compare_sp500(ctx, arg, period="1y"):
-    '''Compare historical stock data for a given ticker symbol against S&P 500 index and period (default: 1 year).'''
+    '''PAID COMMAND. Compare historical stock data for a given ticker symbol against S&P 500 index and period (default: 1 year).'''
+
+    # Check if server has a paid plan
+    server_id = ctx.message.guild.id
+    plan = db.get_active_plan_for_server(server_id)
+    if not plan or plan[1] != "PRO":
+        await ctx.send("❌ This command is available for PRO plan subscribers only. Please upgrade your plan to access this feature.")
+        return
 
     ticker = db.get_ticker_by_name(arg)
     sp500_ticker = "^GSPC"  # Yahoo Finance ticker for S&P 500
