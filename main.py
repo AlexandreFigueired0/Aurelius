@@ -39,7 +39,7 @@ async def on_message(message):
     await bot.process_commands(message)
     
 @bot.event
-def on_guild_join(guild):
+async def on_guild_join(guild):
     # When the bot joins a new server, ensure the server is in the database
     server_id = guild.id
     server_name = guild.name
