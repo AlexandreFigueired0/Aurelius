@@ -238,6 +238,7 @@ async def check_stock_percent_changes():
         subscribed_stocks = db.get_subscribed_stocks(server_id)
 
         # If stock alert channel does not exist, create it
+        channel = discord.utils.get(guild.text_channels, name=STOCKS_ALERT_CHANNEL_NAME)
         if not channel:
             # Create read-only channel for stock alerts
             overwrites = {
@@ -272,7 +273,6 @@ async def check_stock_percent_changes():
                 if alerted:
                     db.reset_stock_alert(server_id, ticker)
 
-        channel = discord.utils.get(guild.text_channels, name=STOCKS_ALERT_CHANNEL_NAME)
 
 
 @bot.command()
