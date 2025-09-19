@@ -50,7 +50,7 @@ cursor.execute('''
 CREATE TABLE IF NOT EXISTS plan (
     id SERIAL PRIMARY KEY,
     plan_name VARCHAR(50) UNIQUE NOT NULL,
-    price DECIMAL(6,2) NOT NULL,
+    price DECIMAL(6,2) NOT NULL
 );
 ''')
 
