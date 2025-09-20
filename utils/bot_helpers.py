@@ -17,6 +17,7 @@ def build_plot( data: list , title: str, x_label: str, y_label: str, line_labels
     ax.set_ylabel(y_label, fontsize=12, color="white")
     ax.set_xlabel(x_label, fontsize=12, color="white")
     y_min = min([min(y) for x,y in data])
+    # y_min = min([min(v for v in y if v) for x, y in data])
     for x,y in data:
         line_color = line_colors[index]
         ax.plot(x, y, color=line_color, linewidth=2, label=line_labels[index])
