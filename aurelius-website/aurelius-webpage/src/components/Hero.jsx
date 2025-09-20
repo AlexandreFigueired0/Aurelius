@@ -1,0 +1,29 @@
+import React from 'react';
+import DiscordChatPreview from './DiscordChatPreview';
+import '../styles/Hero.css';
+
+const Hero = () => {
+  return (
+    <section className="hero">
+      <div className="hero-container">
+        <div className="hero-content">
+          <h1 className="hero-title">
+            Aurelius
+            <span className="hero-subtitle">Financial Discord Bot</span>
+          </h1>
+          <p className="hero-description">
+            Get real-time stock market insights, interactive charts, and the latest financial news 
+            directly in your Discord server. Make informed investment decisions with Aurelius.
+          </p>
+          <div className="hero-buttons">
+            <a href="#invite" className="btn btn-primary">Add to Discord</a>
+            <a href="#features" className="btn btn-secondary">Learn More</a>
+          </div>
+        </div>
+        <DiscordChatPreview />
+      </div>
+    </section>
+  );
+};
+
+export default Hero;

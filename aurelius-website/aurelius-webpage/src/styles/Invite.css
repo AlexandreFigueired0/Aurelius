@@ -1,0 +1,104 @@
+/* Invite Section - Discord Style */
+.invite {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, 
+    rgba(88, 101, 242, 0.1) 0%, 
+    rgba(47, 49, 54, 0.9) 25%, 
+    rgba(0, 210, 106, 0.1) 100%);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.invite::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(88, 101, 242, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(0, 210, 106, 0.1) 0%, transparent 50%);
+  animation: float 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  33% { transform: translateX(-20px) translateY(-10px) rotate(1deg); }
+  66% { transform: translateX(20px) translateY(10px) rotate(-1deg); }
+}
+
+.invite-content {
+  position: relative;
+  z-index: 1;
+}
+
+.invite-content h2 {
+  color: #dcddde;
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #dcddde 0%, var(--discord-blurple) 50%, var(--stock-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.invite-content p {
+  color: #b9bbbe;
+  font-size: 1.25rem;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.invite-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 4rem;
+}
+
+.invite-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.stat {
+  background: rgba(47, 49, 54, 0.8);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  border: 1px solid #40444b;
+  transition: all 0.3s ease;
+}
+
+.stat:hover {
+  transform: translateY(-5px);
+  border-color: var(--discord-blurple);
+  box-shadow: 0 10px 30px rgba(88, 101, 242, 0.3);
+}
+
+.stat h3 {
+  color: var(--discord-blurple);
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 10px rgba(88, 101, 242, 0.5);
+}
+
+.stat p {
+  color: #b9bbbe;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}

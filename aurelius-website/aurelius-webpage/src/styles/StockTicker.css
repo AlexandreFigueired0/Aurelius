@@ -1,0 +1,83 @@
+/* Stock Ticker */
+.stock-ticker {
+  background: #23272a;
+  border-top: 1px solid #40444b;
+  border-bottom: 1px solid #40444b;
+  overflow: hidden;
+  position: relative;
+  padding: 1rem 0;
+}
+
+.ticker-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.ticker-content {
+  display: flex;
+  animation: scroll-ticker 60s linear infinite;
+  white-space: nowrap;
+  gap: 3rem;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(47, 49, 54, 0.8);
+  border-radius: 6px;
+  border: 1px solid #40444b;
+  min-width: 200px;
+  justify-content: space-between;
+}
+
+.ticker-item .symbol {
+  color: #dcddde;
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-width: 60px;
+}
+
+.ticker-item .price {
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 80px;
+  text-align: center;
+}
+
+.ticker-item .price.positive {
+  color: var(--stock-green);
+}
+
+.ticker-item .price.negative {
+  color: var(--stock-red);
+}
+
+.ticker-item .change {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.ticker-item .change.positive {
+  background: rgba(87, 242, 135, 0.2);
+  color: var(--stock-green);
+}
+
+.ticker-item .change.negative {
+  background: rgba(237, 66, 69, 0.2);
+  color: var(--stock-red);
+}
+
+@keyframes scroll-ticker {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}

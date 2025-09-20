@@ -1,0 +1,7 @@
+FROM node:trixie-slim
+
+
+#npm install create-vite
+#npm create vite@latest aurelius-webpage -- --template react
+
+RUN  npm install

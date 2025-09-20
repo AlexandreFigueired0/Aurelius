@@ -1,0 +1,68 @@
+/* Navigation - Discord Style */
+.navbar {
+  background: rgba(47, 49, 54, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid #40444b;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-logo h2 {
+  color: var(--discord-blurple);
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(88, 101, 242, 0.5);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #dcddde;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  position: relative;
+}
+
+.nav-links a:hover {
+  color: var(--discord-blurple);
+  background: rgba(88, 101, 242, 0.1);
+  transform: translateY(-2px);
+}
+
+.nav-links a::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 100%;
+  height: 2px;
+  background: var(--discord-blurple);
+  transition: transform 0.3s ease;
+}
+
+.nav-links a:hover::before {
+  transform: translateX(-50%) scaleX(1);
+}

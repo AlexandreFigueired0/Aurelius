@@ -1,0 +1,90 @@
+/* Commands Section - Discord Channel Style */
+.commands {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, 
+    rgba(54, 57, 63, 0.8) 0%, 
+    rgba(47, 49, 54, 0.8) 50%, 
+    rgba(35, 39, 42, 0.8) 100%);
+}
+
+.commands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.command-category {
+  background: rgba(47, 49, 54, 0.9);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 0;
+  border: 1px solid #40444b;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.command-category:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.command-category h3 {
+  background: #36393f;
+  color: #dcddde;
+  font-size: 1.125rem;
+  font-weight: 700;
+  padding: 1.5rem 2rem;
+  margin: 0;
+  border-bottom: 1px solid #40444b;
+  position: relative;
+}
+
+.command-category h3::before {
+  content: '# ';
+  color: var(--discord-muted);
+  margin-right: 0.5rem;
+}
+
+.command-list {
+  padding: 1.5rem 2rem;
+}
+
+.command-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(64, 68, 75, 0.3);
+}
+
+.command-item:last-child {
+  border-bottom: none;
+}
+
+.command-item code {
+  background: #2f3136;
+  color: var(--discord-blurple);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid #40444b;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.command-item code:hover {
+  background: var(--discord-blurple);
+  color: white;
+  transform: translateX(5px);
+}
+
+.command-item p {
+  color: #b9bbbe;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding-left: 1rem;
+  border-left: 2px solid rgba(88, 101, 242, 0.3);
+}
