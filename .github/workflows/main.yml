@@ -49,9 +49,8 @@ jobs:
         run: |
           scp -i ~/.ssh/key.pem -r ./scripts ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
           scp -i ~/.ssh/key.pem -r ./utils ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-          scp -i ~/.ssh/key.pem ./database-service.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
           scp -i ~/.ssh/key.pem ./main.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-          scp -i ~/.ssh/key.pem ./database-service.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem ./database_service.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
           scp -i ~/.ssh/key.pem ./Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
           scp -i ~/.ssh/key.pem ./requirements.txt ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
           
