@@ -13,7 +13,7 @@ const Invite = () => {
       <div className="container">
         <div className="invite-content">
           <h2>Ready to Get Started?</h2>
-          <p>Add Aurelius to your Discord server and start tracking the markets with your community.</p>
+          <p>Add Aurelius to your Discord server and start tracking the stock market with your community.</p>
           <div className="invite-buttons">
             <a href="#" className="btn btn-primary btn-large">
               🤖 Add to Discord

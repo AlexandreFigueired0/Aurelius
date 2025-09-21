@@ -15,25 +15,12 @@ const Commands = () => {
           description: 'Display price chart for specified timeframe'
         },
         {
-          command: '/company MSFT',
-          description: 'Get detailed company information'
-        }
-      ]
-    },
-    {
-      title: 'Market Data',
-      commands: [
-        {
-          command: '/market',
-          description: 'View overall market status and indices'
+          command: '/info MSFT',
+          description: 'Get information about a specific company'
         },
         {
-          command: '/gainers',
-          description: 'Show today\'s top gaining stocks'
-        },
-        {
-          command: '/losers',
-          description: 'Show today\'s top losing stocks'
+          command: '/metrics AMZN',
+          description: 'Get key financial metrics for a stock'
         }
       ]
     },
@@ -45,13 +32,27 @@ const Commands = () => {
           description: 'Get latest news for specific stock'
         },
         {
-          command: '/alert TSLA 200',
-          description: 'Set price alert for stock'
+          command: '/watch TSLA 8',
+          description: 'Set an alert for percentage price changes of a stock'
         },
         {
-          command: '/watchlist',
-          description: 'Manage your stock watchlist'
+          command: '/list',
+          description: 'View your watchlist'
         }
+      ]
+    },
+    {
+      title: 'Comparsions',
+      commands: [
+        {
+          command: '/compare TSLA NVDA',
+          description: 'Compare two stocks side by side'
+        },
+        {
+          command: '/compare_sp500 GOOGL',
+          description: 'Compare a stock against the S&P 500 index'
+        },
+
       ]
     }
   ];
@@ -60,7 +61,7 @@ const Commands = () => {
     <section id="commands" className="commands">
       <div className="container">
         <h2 className="section-title">Bot Commands</h2>
-        <div className="commands-grid">
+        <div className="commands-container">
           {commandCategories.map((category, index) => (
             <div key={index} className="command-category">
               <h3>{category.title}</h3>
