@@ -64,11 +64,12 @@
 }
 
 .invite-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
   gap: 2rem;
-  max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
+  flex-wrap: nowrap;
 }
 
 .stat {
@@ -101,4 +102,8 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
+}
+
+.btn.btn-outline{
+  color: white;
 }

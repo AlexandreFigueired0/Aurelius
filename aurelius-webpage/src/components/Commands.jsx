@@ -36,6 +36,10 @@ const Commands = () => {
           description: 'Set an alert for percentage price changes of a stock'
         },
         {
+          command: '/unwatch TSLA',
+          description: 'Remove an alert for a specific stock'
+        },
+        {
           command: '/list',
           description: 'View your watchlist'
         }

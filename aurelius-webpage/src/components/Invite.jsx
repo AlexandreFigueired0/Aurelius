@@ -3,9 +3,9 @@ import '../styles/Invite.css';
 
 const Invite = () => {
   const stats = [
-    { value: '10,000+', label: 'Servers' },
-    { value: '500,000+', label: 'Users' },
-    { value: '99.9%', label: 'Uptime' }
+    { value: '🚀', label: 'Ready to Use' },
+    { value: '📈', label: 'Growing Community' },
+    { value: '⚡', label: 'Active Development' }
   ];
 
   return (
@@ -15,7 +15,7 @@ const Invite = () => {
           <h2>Ready to Get Started?</h2>
           <p>Add Aurelius to your Discord server and start tracking the stock market with your community.</p>
           <div className="invite-buttons">
-            <a href="#" className="btn btn-primary btn-large">
+            <a href="https://discord.com/oauth2/authorize?client_id=1415287898760286303&permissions=292058082304&integration_type=0&scope=bot" className="btn btn-primary btn-large">
               🤖 Add to Discord
             </a>
             <a href="#" className="btn btn-outline">
