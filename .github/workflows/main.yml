@@ -45,11 +45,20 @@ jobs:
           chmod 600 ~/.ssh/key.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Send only necessary files
+        run: |
+          scp -i ~/.ssh/key.pem -r ./scripts ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem -r ./utils ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem ./database-service.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem ./main.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem ./database-service.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem ./Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          scp -i ~/.ssh/key.pem ./requirements.txt ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
+          
       - name: Connect and deploy
         run: |
           ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd Aurelius
-            git pull
             docker stop aurelius
             docker rm aurelius
             docker rmi -f aurelius || true
