@@ -9,24 +9,14 @@ const Features = () => {
       description: 'Get instant access to live stock prices, market caps, and trading volumes for thousands of stocks worldwide.'
     },
     {
-      icon: '📊',
-      title: 'Interactive Charts',
-      description: 'Visualize stock performance with dynamic charts showing price movements, trends, and technical indicators.'
-    },
-    {
       icon: '📰',
       title: 'Financial News',
       description: 'Stay updated with the latest market news, earnings reports, and financial analysis from trusted sources.'
     },
     {
-      icon: '💼',
-      title: 'Portfolio Tracking',
-      description: 'Monitor your investments and get personalized alerts for price changes and market events.'
-    },
-    {
       icon: '🔍',
-      title: 'Company Analysis',
-      description: 'Access detailed company information, financial ratios, and fundamental analysis data.'
+      title: 'Stock Analysis',
+      description: 'Access detailed stock information, financial ratios, and fundamental analysis data.'
     },
     {
       icon: '⚡',
