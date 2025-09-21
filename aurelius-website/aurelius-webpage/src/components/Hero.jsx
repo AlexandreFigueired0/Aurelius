@@ -12,8 +12,8 @@ const Hero = () => {
             <span className="hero-subtitle">Financial Discord Bot</span>
           </h1>
           <p className="hero-description">
-            Get real-time stock market insights, interactive charts, and the latest financial news 
-            directly in your Discord server. Make informed investment decisions with Aurelius.
+            Access real-time stock market info, charts, and financial news directly in your Discord server. 
+            Discuss investments with your community and make informed decisions.
           </p>
           <div className="hero-buttons">
             <a href="#invite" className="btn btn-primary">Add to Discord</a>
