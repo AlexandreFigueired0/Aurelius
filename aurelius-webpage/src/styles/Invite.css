@@ -40,7 +40,7 @@
   font-size: 3rem;
   font-weight: 900;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #dcddde 0%, var(--discord-blurple) 50%, var(--stock-green) 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #dcddde 50%, var(--stock-green) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
