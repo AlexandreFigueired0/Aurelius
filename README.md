@@ -23,6 +23,7 @@ See source code in [main.py](main.py), DB layer in [database_service.py](databas
   - `!news <ticker|company>` — latest news with paginated embeds
   - `!watch <ticker|company> [threshold]` — price change alerts (default 10%)
   - `!unwatch <ticker|company>` — stop alerts
+  - `!unwatchall` — stop all alerts for this server
   - `!list` — list watched tickers and thresholds
   - `!metrics <ticker|company>` — key financial metrics snapshot
   - `!compare <ticker1> <ticker2> [period]` — compare two tickers
@@ -33,6 +34,25 @@ See source code in [main.py](main.py), DB layer in [database_service.py](databas
 - PostgreSQL schema and seed via [utils/init_db.py](utils/init_db.py), using SEC company tickers from [utils/collect_stocks_names.py](utils/collect_stocks_names.py) (no CSV needed).
 - Docker images for bot runtime and a Dev Container for local iteration.
 - Automated deploy to EC2 using [/.github/workflows/main.yml](.github/workflows/main.yml).
+
+---
+
+## Plans & Limits
+
+- Free: watch up to `FREE_PLAN_MAX_WATCHED_STOCKS` tickers (default 5); access to core commands.
+- Pro: higher watch limits (default 50) and premium commands:
+  - `!compare`, `!compare_sp500`
+  - Extended fields in `!metrics` (targets, recommendation, growth, FCF)
+
+Plans are stored in the DB (`plan`, `server_plan` tables) and seeded by [utils/init_db.py](utils/init_db.py). You can change a server plan via `database_service.update_server_plan`.
+
+Environment overrides for limits:
+
+```bash
+# Optional, defaults shown
+FREE_PLAN_MAX_WATCHED_STOCKS=5
+PRO_PLAN_MAX_WATCHED_STOCKS=50
+```
 
 ---
 
@@ -68,6 +88,24 @@ The entrypoint runs [utils/init_db.py](utils/init_db.py) to create/seed the DB, 
 
 ---
 
+## Web App (Landing Page)
+
+This repo includes a small React + Vite landing page in `aurelius-webpage/`. 
+
+- Dev:
+  ```bash
+  cd aurelius-webpage
+  npm install
+  npm run dev
+  ```
+- Build:
+  ```bash
+  npm run build
+  ```
+
+The site showcases features, pricing, and a Discord chat preview. It is decoupled from the bot runtime.
+It is deployed in AWS S3 with a custom domain name [aureliusbot.app](aureliusbot.app)
+
 ## Deployment (GitHub Actions → EC2)
 
 Pushes to `main` trigger [/.github/workflows/main.yml](.github/workflows/main.yml) which:
@@ -101,3 +139,10 @@ Then the workflow’s deploy step will start the bot via:
 - Data seeding from the SEC’s official ticker list (no CSV maintenance).
 - Production tooling: Dockerized runtime, persistent DB volume, and CI/CD to EC2.
 - Dev ergonomics: VS Code Dev Container and simple scripts for running infra locally.
+
+---
+
+## Policies
+
+- Privacy: see [PRIVACY_POLICY.md](PRIVACY_POLICY.md)
+- Terms: see [TERMS_OF_SERVICE.md](TERMS_OF_SERVICE.md)
