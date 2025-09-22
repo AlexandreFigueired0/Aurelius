@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/DiscordChatPreview.css';
+import chartImg from '../assets/chart.png';
 
 const DiscordChatPreview = () => {
   return (
@@ -71,7 +72,7 @@ const DiscordChatPreview = () => {
                   </span>
                 </div>
                 <div className="chart-section">
-                  <img src="src/assets/chart.png" alt="AMZN Stock Chart - Last 1 Month" className="stock-chart" />
+                  <img src={chartImg} alt="AMZN Stock Chart - Last 1 Month" className="stock-chart" />
                 </div>
                 <div className="data-source">
                   <small>Data provided by Yahoo Finance (yfinance)</small>
