@@ -101,5 +101,4 @@ jobs:
 
       - name: Upload website files to S3
         run: |
-          ls -l
           aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
