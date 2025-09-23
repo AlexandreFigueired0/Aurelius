@@ -318,6 +318,7 @@ async def help(ctx):
     embed.add_field(name="!chart <ticker> [period]", value="Fetch historical stock data for a given ticker symbol and period (default: 1 month).", inline=False)
     embed.add_field(name="!watch <ticker> [threshold]", value="Watch a stock and get notified when its price changes by a certain percentage (default: 10%).", inline=False)
     embed.add_field(name="!unwatch <ticker>", value="Stop watching a stock.", inline=False)
+    embed.add_field(name="!unwatchall", value="Stop watching all stocks.", inline=False)
     embed.add_field(name="!list", value="List all watched stocks for this server.", inline=False)
     embed.add_field(name="!news <ticker>", value="Fetch latest news articles for a given ticker symbol.", inline=False)
     embed.add_field(name="!metrics <ticker>", value="Fetch key financial metrics for a given ticker symbol.", inline=False)
