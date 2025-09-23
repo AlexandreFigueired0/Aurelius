@@ -2,10 +2,11 @@ name: Build and Deploy React website to AWS S3 and CloudFront
 
 on:
   push:
-    branches: [ main ]
-  paths:
-    - 'aurelius-webpage/**'
-    - '.github/workflows/website-deploy.yml'
+    branches:
+      - main
+    paths:
+      - 'aurelius-webpage/**'
+      - '.github/workflows/website-deploy.yml'
 
 jobs:     
   build_website:

@@ -2,15 +2,16 @@ name: Build and Deploy Bot container to AWS EC2
 
 on:
   push:
-    branches: [ main ]
-  paths:
-    - 'scripts/**'
-    - 'utils/**'
-    - 'database_service.py'
-    - 'Dockerfile'
-    - 'main.py'
-    - 'requirements.txt'
-    - '.github/workflows/bot-deploy.yml'
+    branches: 
+      - main
+    paths:
+      - 'scripts/**'
+      - 'utils/**'
+      - 'database_service.py'
+      - 'Dockerfile'
+      - 'main.py'
+      - 'requirements.txt'
+      - '.github/workflows/bot-deploy.yml'
 
 jobs:
   build_image:
