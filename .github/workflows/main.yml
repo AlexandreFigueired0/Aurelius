@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build_image:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +21,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+  build_website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -49,9 +54,9 @@ jobs:
           path: aurelius-webpage/dist
           if-no-files-found: error
 
-  deploy:
+  deploy_bot:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build_image
 
     steps:
       - name: Checkout
@@ -67,11 +72,6 @@ jobs:
       - name: Send only necessary files
         run: |
           scp -i ~/.ssh/key.pem -r ./scripts ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-      #     scp -i ~/.ssh/key.pem -r ./utils ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-      #     scp -i ~/.ssh/key.pem ./main.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-      #     scp -i ~/.ssh/key.pem ./database_service.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-      #     scp -i ~/.ssh/key.pem ./Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
-      #     scp -i ~/.ssh/key.pem ./requirements.txt ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Aurelius/
           
       - name: Deploy Bot on EC2
         run: |
@@ -86,6 +86,10 @@ jobs:
             docker rmi -f ${{ secrets.DOCKER_NAME }}/aurelius:latest
           EOF
 
+  deploy_website:
+    runs-on: ubuntu-latest
+    needs: build_website
+    steps:
       - name: Download web production artifacts
         uses: actions/download-artifact@v4
         with:
@@ -114,7 +118,7 @@ jobs:
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "*.html"
 
-      - name: Invalidate CloudFront cache (optional)
+      - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
