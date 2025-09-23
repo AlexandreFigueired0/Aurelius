@@ -417,7 +417,7 @@ async def metrics(ctx, arg):
     target_high = round(float(info.get("targetHighPrice", 0)), 2)
     target_low = round(float(info.get("targetLowPrice", 0)), 2)
     target_mean = round(float(info.get("targetMeanPrice", 0)), 2)
-    recommendation = round(float(info.get("recommendationKey", 0)), 2)
+    recommendation = info.get("recommendationKey", "N/A")
 
     earnings_growth = round(float(info.get("earningsGrowth", 0)), 2) * 100
     shares_outstanding = round(float(info.get("sharesOutstanding", 0)), 2)
