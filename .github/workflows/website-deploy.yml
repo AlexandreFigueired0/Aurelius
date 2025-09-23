@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   paths:
     - 'aurelius-webpage/**'
-    - '.github/workflows/website-deply.yml'
+    - '.github/workflows/website-deploy.yml'
 
 jobs:     
   build_website:

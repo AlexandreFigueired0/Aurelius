@@ -3,7 +3,7 @@ name: Build and Deploy Bot container to AWS EC2
 on:
   push:
     branches: [ main ]
-  path:
+  paths:
     - 'scripts/**'
     - 'utils/**'
     - 'database_service.py'
