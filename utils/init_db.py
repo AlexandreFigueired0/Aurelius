@@ -57,11 +57,14 @@ CREATE TABLE IF NOT EXISTS plan (
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS server_plan (
     id SERIAL PRIMARY KEY,
-    server_id INTEGER REFERENCES server(id) ON DELETE CASCADE,
+    server_id INTEGER REFERENCES server(id) ON DELETE CASCADE UNIQUE,
     plan_id INTEGER REFERENCES plan(id) ON DELETE CASCADE,
     start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_date TIMESTAMP NULL,
-    UNIQUE (server_id)
+    entitlement_id BIGINT UNIQUE,
+    purchaser_user_id BIGINT,
+    billing_platform TEXT,
+    original_plan_name VARCHAR(50)
 );
 ''')
 
