@@ -44,7 +44,9 @@ def insert_server(discord_server_id, server_name):
         return  # Server already exists
 
     # Insert new server
-    cursor.execute('INSERT INTO server (server_id, server_name) VALUES (%s, %s)', (discord_server_id, server_name))
+    cursor.execute('INSERT INTO server (server_id, server_name) VALUES (%s, %s) RETURNING id', (discord_server_id, server_name))
+    server_id = cursor.fetchone()[0]
+    
     # Insert initial plan as 'Free'
     free_plan = get_plan_by_name('Free')
     server_id = get_server_internal_id(discord_server_id)

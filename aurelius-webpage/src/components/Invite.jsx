@@ -18,9 +18,6 @@ const Invite = () => {
             <a href="https://discord.com/oauth2/authorize?client_id=1415287898760286303&permissions=292058082304&integration_type=0&scope=bot" className="btn btn-primary btn-large">
               🤖 Add to Discord
             </a>
-            <a href="#" className="btn btn-outline">
-              📖 Documentation
-            </a>
           </div>
           <div className="invite-stats">
             {stats.map((stat, index) => (
