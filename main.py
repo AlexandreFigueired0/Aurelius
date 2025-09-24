@@ -9,6 +9,8 @@ from io import BytesIO
 import database_service as db
 from datetime import datetime, timezone
 from utils.bot_helpers import build_plot, round_large_number, shorten_description
+import logging
+
 
 load_dotenv()
 
@@ -18,6 +20,16 @@ handler = logging.FileHandler(filename='discord.log', encoding="utf-8", mode="w"
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('aurelius.log'),  # Your app logs
+        logging.StreamHandler()  # Also print to console
+    ]
+)
+logger = logging.getLogger('aurelius')
 
 bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
 NEWS_PER_PAGE = 5
@@ -32,7 +44,7 @@ DISCORD_FREE_PLAN_NAME=os.getenv("DISCORD_FREE_PLAN_NAME", "Free")
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user.name} is ready")
+    logger.info(f"{bot.user.name} is ready")
     check_stock_percent_changes.start()
 
 @bot.event
@@ -53,7 +65,7 @@ async def on_entitlement_create(entitlement):
     sku_id = int(entitlement.sku_id)
     plan_name = db.SKU_ID_TO_PLAN.get(sku_id, None)
     if not plan_name:
-        print(f"Unknown SKU ID: {sku_id}. No matching plan found.")
+        logger.warning(f"Unknown SKU ID: {sku_id}. No matching plan found.")
         return
 
     guild_id = int(entitlement.guild_id)
@@ -61,7 +73,7 @@ async def on_entitlement_create(entitlement):
     entitlement_id = int(entitlement.id)
 
     db.create_entitlement(guild_id, user_id, entitlement_id, plan_name)
-    print(f"Applied entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
+    logger.info(f"Applied entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
 
 @bot.event
 async def on_entitlement_update(entitlement):
@@ -69,7 +81,7 @@ async def on_entitlement_update(entitlement):
     sku_id = int(entitlement.sku_id)
     plan_name = db.SKU_ID_TO_PLAN.get(sku_id, None)
     if not plan_name:
-        print(f"Unknown SKU ID: {sku_id}. No matching plan found.")
+        logger.warning(f"Unknown SKU ID: {sku_id}. No matching plan found.")
         return
 
     guild_id = int(entitlement.guild_id)
@@ -78,20 +90,20 @@ async def on_entitlement_update(entitlement):
 
     # Check if the entitlement is still active
     if entitlement.deleted:
-        print(f"Entitlement {entitlement_id} is deleted. Revoking plan for Guild {guild_id}.")
+        logger.warning(f"Entitlement {entitlement_id} is deleted. Revoking plan for Guild {guild_id}.")
         db.remove_entitlement(guild_id, entitlement_id)
     else: # Update/Renewal
         current_plan = db.get_server_plan(guild_id)
         if current_plan and current_plan[0] == plan_name:
             # Same plan, just a renewal
-            print(f"Renewing {plan_name} plan for Guild {guild_id}.")
+            logger.info(f"Renewing {plan_name} plan for Guild {guild_id}.")
             db.renew_entitlement(guild_id, entitlement_id)
         else:
             # Plan change
             db.create_entitlement(guild_id, user_id, entitlement_id, plan_name)
-            print(f"Changed entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
+            logger.info(f"Changed entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
 
-        print(f"Updated entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
+        logger.info(f"Updated entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
 
 @bot.event
 async def on_entitlement_delete(entitlement):
@@ -100,7 +112,7 @@ async def on_entitlement_delete(entitlement):
     entitlement_id = int(entitlement.id)
 
     db.remove_entitlement(guild_id, entitlement_id)
-    print(f"Revoked entitlement: Guild {guild_id}, Entitlement ID {entitlement_id}")
+    logger.info(f"Revoked entitlement: Guild {guild_id}, Entitlement ID {entitlement_id}")
 
 @bot.command()
 async def hello(ctx):
@@ -316,7 +328,7 @@ async def list(ctx):
 async def check_stock_percent_changes():
     '''Check stock price changes for all watched stocks and notify servers if thresholds are crossed.'''
 
-    print("Checking stock price changes...")
+    logger.info("Checking stock price changes...")
 
     for guild in bot.guilds:
         server_id = guild.id
@@ -333,7 +345,7 @@ async def check_stock_percent_changes():
             channel = await guild.create_text_channel(STOCKS_ALERT_CHANNEL_NAME, overwrites=overwrites)
             
             await channel.send("📈 Stock price alerts are now active!")
-            print(f"Created channel: {STOCKS_ALERT_CHANNEL_NAME} in server: {guild.name} ({guild.id})")
+            logger.info(f"Created channel: {STOCKS_ALERT_CHANNEL_NAME} in server: {guild.name} ({guild.id})")
 
         for stock_id, threshold, alerted, last_alerted in subscribed_stocks:
             ticker = db.get_ticker_by_id(stock_id)
