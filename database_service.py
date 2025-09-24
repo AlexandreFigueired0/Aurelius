@@ -47,8 +47,8 @@ def insert_server(discord_server_id, server_name):
     cursor.execute('INSERT INTO server (server_id, server_name) VALUES (%s, %s)', (discord_server_id, server_name))
     # Insert initial plan as 'Free'
     free_plan = get_plan_by_name('Free')
-    if free_plan:
-        cursor.execute('INSERT INTO server_plan (server_id, plan_id) VALUES (%s, %s)', (server_id, free_plan[0]))
+    server_id = get_server_internal_id(discord_server_id)
+    cursor.execute('INSERT INTO server_plan (server_id, plan_id) VALUES (%s, %s)', (server_id, free_plan[0]))
     
     conn.commit()
     cursor.close()
