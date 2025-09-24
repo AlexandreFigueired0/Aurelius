@@ -13,6 +13,11 @@ conn = psycopg2.connect(
     port='5432'
 )
 
+
+SKU_ID_TO_PLAN = {
+    int(os.getenv("DISCORD_PRO_SERVER_SKU_ID")): os.getenv("DISCORD_PRO_PLAN_NAME", "PRO")
+}
+
 # conn = None
 
 DISCORD_PRO_SERVER_SKU_ID=int(os.getenv("DISCORD_PRO_SERVER_SKU_ID"))
@@ -208,6 +213,40 @@ def update_server_plan(discord_server_id, new_plan_name):
     conn.commit()
     cursor.close()
 
+
+def apply_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan_name, billing_platform="Discord"):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    plan_name = SKU_ID_TO_PLAN.get(sku_id, None)
+    if not plan_name:
+        cursor.close()
+        raise ValueError("Invalid SKU ID")
+    plan = get_plan_by_name(plan_name)
+    plan_id = plan[0] if plan else None
+    if not plan_id:
+        cursor.close()
+        raise ValueError("Plan not found")
+    
+    # If entitlement_id already exists, do nothing
+    cursor.execute('SELECT id FROM server_plan WHERE entitlement_id = %s', (entitlement_id,))
+    if cursor.fetchone():
+        cursor.close()
+        return
+
+    # Server always has a plan since we insert a Free plan on server creation
+    cursor.execute('UPDATE server_plan \
+                    SET plan_id = %s, \
+                    entitlement_id = %s, \
+                    purchaser_user_id = %s, \
+                    billing_platform = %s, \
+                    original_plan_name = %s \
+                    WHERE server_id = %s',
+                   (plan_id, entitlement_id, purchaser_user_id, billing_platform, plan_name, server_id))
+    
+    conn.commit()
+    cursor.close()
+
+def remove_entitlement(discord_server_id):
 
 def close_connection():
     conn.close()

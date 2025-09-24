@@ -57,14 +57,15 @@ CREATE TABLE IF NOT EXISTS plan (
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS server_plan (
     id SERIAL PRIMARY KEY,
-    server_id INTEGER REFERENCES server(id) ON DELETE CASCADE UNIQUE,
-    plan_id INTEGER REFERENCES plan(id) ON DELETE CASCADE,
-    start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    end_date TIMESTAMP NULL,
+    server_id INTEGER NOT NULL REFERENCES server(id) ON DELETE CASCADE,
+    plan_id INTEGER NOT NULL REFERENCES plan(id) ON DELETE CASCADE,
+    start_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    end_date TIMESTAMPTZ NULL,
     entitlement_id BIGINT UNIQUE,
     purchaser_user_id BIGINT,
     billing_platform TEXT,
-    original_plan_name VARCHAR(50)
+    original_plan_name VARCHAR(50),
+    UNIQUE (server_id)
 );
 ''')
 
@@ -87,7 +88,7 @@ count = cursor.fetchone()[0]
 if count == 0:
     plans = [
         ('Free', 0.00),
-        ('Pro', 4.99),
+        ('PRO', 4.99),
     ]
     for plan_name, price in plans:
         cursor.execute('INSERT INTO plan (plan_name, price) VALUES (%s, %s) ON CONFLICT (plan_name) DO NOTHING', (plan_name, price))

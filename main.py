@@ -47,6 +47,39 @@ async def on_guild_join(guild):
     server_name = guild.name
     db.insert_server(server_id, server_name)
 
+@bot.event
+async def on_entitlement_create(entitlement):
+    '''Handle Discord entitlement creation (when a user subscribes to a plan).'''
+    sku_id = int(entitlement.sku_id)
+    plan_name = db.SKU_ID_TO_PLAN.get(sku_id, None)
+    if not plan_name:
+        print(f"Unknown SKU ID: {sku_id}. No matching plan found.")
+        return
+
+    guild_id = int(entitlement.guild_id)
+    user_id = int(entitlement.user_id)
+    entitlement_id = int(entitlement.id)
+
+    db.apply_entitlement(guild_id, user_id, entitlement_id, plan_name)
+    print(f"Applied entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
+
+@bot.event
+async def on_entitlement_update(entitlement):
+    '''Handle Discord entitlement updates (e.g., plan changes).'''
+    sku_id = int(entitlement.sku_id)
+    plan_name = db.SKU_ID_TO_PLAN.get(sku_id, None)
+    if not plan_name:
+        print(f"Unknown SKU ID: {sku_id}. No matching plan found.")
+        return
+
+    guild_id = int(entitlement.guild_id)
+    user_id = int(entitlement.user_id)
+    entitlement_id = int(entitlement.id)
+
+    # Get current server plan
+    server_plan = db.get_server_plan(guild_id)
+    current_plan_name = server_plan[0] if server_plan else None
+
 @bot.command()
 async def hello(ctx):
     await ctx.send(f"Hello {ctx.author.mention}!")
