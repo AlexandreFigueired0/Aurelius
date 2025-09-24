@@ -60,7 +60,7 @@ async def on_entitlement_create(entitlement):
     user_id = int(entitlement.user_id)
     entitlement_id = int(entitlement.id)
 
-    db.apply_entitlement(guild_id, user_id, entitlement_id, plan_name)
+    db.create_entitlement(guild_id, user_id, entitlement_id, plan_name)
     print(f"Applied entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
 
 @bot.event
@@ -76,9 +76,32 @@ async def on_entitlement_update(entitlement):
     user_id = int(entitlement.user_id)
     entitlement_id = int(entitlement.id)
 
-    # Get current server plan
-    server_plan = db.get_server_plan(guild_id)
-    current_plan_name = server_plan[0] if server_plan else None
+    # Check if the entitlement is still active
+    if entitlement.deleted:
+        print(f"Entitlement {entitlement_id} is deleted. Revoking plan for Guild {guild_id}.")
+        db.remove_entitlement(guild_id, entitlement_id)
+    else: # Update/Renewal
+        current_plan = db.get_server_plan(guild_id)
+        if current_plan and current_plan[0] == plan_name:
+            # Same plan, just a renewal
+            print(f"Renewing {plan_name} plan for Guild {guild_id}.")
+            db.renew_entitlement(guild_id, entitlement_id)
+        else:
+            # Plan change
+            db.create_entitlement(guild_id, user_id, entitlement_id, plan_name)
+            print(f"Changed entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
+
+        db.update_entitlement(guild_id, user_id, entitlement_id, plan_name)
+        print(f"Updated entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
+
+@bot.event
+async def on_entitlement_delete(entitlement):
+    '''Handle Discord entitlement deletion (when a user unsubscribes from a plan).'''
+    guild_id = int(entitlement.guild_id)
+    entitlement_id = int(entitlement.id)
+
+    db.remove_entitlement(guild_id, entitlement_id)
+    print(f"Revoked entitlement: Guild {guild_id}, Entitlement ID {entitlement_id}")
 
 @bot.command()
 async def hello(ctx):

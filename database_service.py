@@ -215,7 +215,7 @@ def update_server_plan(discord_server_id, new_plan_name):
     cursor.close()
 
 
-def apply_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan_name, billing_platform="Discord"):
+def create_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan_name, billing_platform="Discord"):
     cursor = conn.cursor()
     server_id = get_server_internal_id(discord_server_id)
     plan_name = SKU_ID_TO_PLAN.get(sku_id, None)
@@ -251,7 +251,47 @@ def apply_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan
     conn.commit()
     cursor.close()
 
-def remove_entitlement(discord_server_id):
+def renew_entitlement(discord_server_id, entitlement_id):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    
+    # Calculate new end_date (preserve start_date)
+    end_date = datetime.datetime.now() + datetime.timedelta(days=30)
+    
+    cursor.execute('UPDATE server_plan \
+                    SET end_date = %s \
+                    WHERE server_id = %s AND entitlement_id = %s',
+                   (end_date, server_id, entitlement_id))
+    
+    conn.commit()
+    cursor.close()
+
+def remove_entitlement(discord_server_id, entitlement_id):
+    cursor = conn.cursor()
+    server_id = get_server_internal_id(discord_server_id)
+    free_plan = get_plan_by_name('Free')
+    free_plan_id = free_plan[0] if free_plan else None
+    if not free_plan_id:
+        cursor.close()
+        raise ValueError("Free plan not found")
+    
+    # Put server back to Free plan
+    cursor.execute('UPDATE server_plan \
+                    SET plan_id = %s, \
+                    entitlement_id = NULL, \
+                    purchaser_user_id = NULL, \
+                    billing_platform = NULL, \
+                    original_plan_name = NULL, \
+                    start_date = NOW(), \
+                    end_date = NULL \
+                    WHERE server_id = %s \
+                    AND entitlement_id = %s',
+                   (free_plan_id, server_id, entitlement_id))
+
+    conn.commit()
+    cursor.close()
+
+def update_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan_name, billing_platform="Discord"):
 
 def close_connection():
     conn.close()
