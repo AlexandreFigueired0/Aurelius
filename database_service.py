@@ -1,6 +1,9 @@
 import psycopg2
 import pandas as pd
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 conn = psycopg2.connect(
     dbname=os.getenv("POSTGRES_DB"),
@@ -11,6 +14,10 @@ conn = psycopg2.connect(
 )
 
 # conn = None
+
+DISCORD_PRO_SERVER_SKU_ID=int(os.getenv("DISCORD_PRO_SERVER_SKU_ID"))
+DISCORD_PRO_PLAN_NAME=os.getenv("DISCORD_PRO_PLAN_NAME", "PRO")
+DISCORD_FREE_PLAN_NAME=os.getenv("DISCORD_FREE_PLAN_NAME", "Free")
 
 def get_ticker_by_name(company_name):
     cursor = conn.cursor()
@@ -50,7 +57,7 @@ def insert_server(discord_server_id, server_name):
     # Insert initial plan as 'Free'
     free_plan = get_plan_by_name('Free')
     server_id = get_server_internal_id(discord_server_id)
-    cursor.execute('INSERT INTO server_plan (server_id, plan_id) VALUES (%s, %s)', (server_id, free_plan[0]))
+    cursor.execute('INSERT INTO server_plan (server_id, plan_id, original_plan_name) VALUES (%s, %s, %s)', (server_id, free_plan[0], 'Free'))
     
     conn.commit()
     cursor.close()
@@ -163,7 +170,7 @@ def insert_server_plan(discord_server_id, plan_name):
     if cursor.fetchone():
         cursor.close()
         raise ValueError("Server already has a plan")
-    cursor.execute('INSERT INTO server_plan (server_id, plan_id) VALUES (%s, %s)', (server_id, plan_id))
+    cursor.execute('INSERT INTO server_plan (server_id, plan_id, ori) VALUES (%s, %s)', (server_id, plan_id))
     conn.commit()
     cursor.close()
 
@@ -200,6 +207,7 @@ def update_server_plan(discord_server_id, new_plan_name):
     cursor.execute('UPDATE server_plan SET plan_id = %s, start_date = NOW(), end_date = NULL WHERE server_id = %s', (plan_id, server_id))
     conn.commit()
     cursor.close()
+
 
 def close_connection():
     conn.close()
