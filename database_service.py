@@ -2,6 +2,7 @@ import psycopg2
 import pandas as pd
 import os
 from dotenv import load_dotenv
+import datetime
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -232,6 +233,8 @@ def apply_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan
     if cursor.fetchone():
         cursor.close()
         return
+    
+    end_date = datetime.datetime.now() + datetime.timedelta(days=30)
 
     # Server always has a plan since we insert a Free plan on server creation
     cursor.execute('UPDATE server_plan \
@@ -239,10 +242,12 @@ def apply_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan
                     entitlement_id = %s, \
                     purchaser_user_id = %s, \
                     billing_platform = %s, \
-                    original_plan_name = %s \
+                    original_plan_name = %s, \
+                    start_date = NOW(), \
+                    end_date = %s \
                     WHERE server_id = %s',
-                   (plan_id, entitlement_id, purchaser_user_id, billing_platform, plan_name, server_id))
-    
+                   (plan_id, entitlement_id, purchaser_user_id, billing_platform, plan_name, end_date, server_id))
+
     conn.commit()
     cursor.close()
 
