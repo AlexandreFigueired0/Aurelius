@@ -176,7 +176,7 @@ def insert_server_plan(discord_server_id, plan_name):
     if cursor.fetchone():
         cursor.close()
         raise ValueError("Server already has a plan")
-    cursor.execute('INSERT INTO server_plan (server_id, plan_id, ori) VALUES (%s, %s)', (server_id, plan_id))
+    cursor.execute('INSERT INTO server_plan (server_id, plan_id, original_plan_name) VALUES (%s, %s, %s)', (server_id, plan_id, plan_name))
     conn.commit()
     cursor.close()
 
@@ -218,10 +218,6 @@ def update_server_plan(discord_server_id, new_plan_name):
 def create_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan_name, billing_platform="Discord"):
     cursor = conn.cursor()
     server_id = get_server_internal_id(discord_server_id)
-    plan_name = SKU_ID_TO_PLAN.get(sku_id, None)
-    if not plan_name:
-        cursor.close()
-        raise ValueError("Invalid SKU ID")
     plan = get_plan_by_name(plan_name)
     plan_id = plan[0] if plan else None
     if not plan_id:
@@ -291,7 +287,6 @@ def remove_entitlement(discord_server_id, entitlement_id):
     conn.commit()
     cursor.close()
 
-def update_entitlement(discord_server_id, purchaser_user_id, entitlement_id, plan_name, billing_platform="Discord"):
 
 def close_connection():
     conn.close()
