@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS server_plan (
     end_date TIMESTAMPTZ NULL,
     entitlement_id BIGINT UNIQUE,
     purchaser_user_id BIGINT,
-    billing_platform TEXT,
+    billing_platform VARCHAR(50),
     original_plan_name VARCHAR(50),
     UNIQUE (server_id)
 );
