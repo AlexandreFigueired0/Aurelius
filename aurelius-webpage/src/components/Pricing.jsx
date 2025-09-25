@@ -36,7 +36,7 @@ const Pricing = () => {
         '✅ Priority support',
       ],
       buttonText: 'Subscribe Now',
-      buttonLink: '#subscribe-pro',
+      buttonLink: 'https://discord.com/discovery/applications/1415287898760286303/store',
       note: 'Start monitoring multiple stocks and analyzing complex metrics'
     },
 
@@ -67,7 +67,7 @@ const Pricing = () => {
                 </ul>
               </div>
               <div className="pricing-footer">
-                <a href={plan.buttonLink} className={`btn ${plan.best ? 'btn-primary' : 'btn-outline'}`}>
+                <a href={plan.buttonLink} target="_blank" className={`btn ${plan.best ? 'btn-primary' : 'btn-outline'}`}>
                   {plan.buttonText}
                 </a>
                 <p className="pricing-note">{plan.note}</p>
