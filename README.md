@@ -1,13 +1,29 @@
 # Aurelius — Discord Stock Bot
 
-Aurelius is a Discord bot that delivers live stock data, charts, news, and price alerts to your server. It’s built to be production-ready (Dockerized, CI/CD with GitHub Actions) and also serves as a portfolio‑grade project highlighting a clean Python service, a PostgreSQL schema, and an automated deployment workflow.
+Aurelius is a Discord bot that delivers live stock data, charts, news, and price alerts to your server. It's built to be production-re- **Full-stack application**: Discord bot backend + React frontend with modern deployment pipeline
+- **Cloud-native architecture**: AWS multi-service deployment (EC2, S3, CloudFront)
+- **Advanced CI/CD**: Dual-pipeline GitHub Actions with path-based triggers and independent scaling
+- **Performance optimization**: CloudFront CDN with intelligent caching strategy for global reach
+- **Clean separation of concerns**: Bot backend and web frontend deployed independently
+- **Production-grade infrastructure**: 
+  - Dockerized microservices with persistent PostgreSQL
+  - Static site hosting with immutable asset caching
+  - SSL/TLS termination via CloudFront
+- **Developer experience**: VS Code Dev Containers, automated deployments, and modular scripts
 
+**Bot Backend:**
 - Core runtime: Python 3.13, [discord.py](https://discordpy.readthedocs.io/)
 - Market data: [yfinance](https://pypi.org/project/yfinance/)
 - Data & plotting: pandas, matplotlib
 - Persistence: PostgreSQL (psycopg2)
 - Containerization: Docker (+ VS Code Dev Containers)
-- CI/CD: GitHub Actions with SSH deployment to EC2
+- Deployment: GitHub Actions → Docker Hub → AWS EC2
+
+**Web Frontend:**
+- Framework: React + Vite
+- Deployment: GitHub Actions → AWS S3 + CloudFront CDN
+- Domain: Custom domain with HTTPS via CloudFront
+- Cache strategy: Immutable assets with cache-busting for HTML
 
 See source code in [main.py](main.py), DB layer in [database_service.py](database_service.py), database bootstrap in [utils/init_db.py](utils/init_db.py), and runner scripts in [scripts/](scripts). Ticker seeding is fetched from the SEC in [utils/collect_stocks_names.py](utils/collect_stocks_names.py).
 
@@ -29,11 +45,6 @@ See source code in [main.py](main.py), DB layer in [database_service.py](databas
   - `!compare <ticker1> <ticker2> [period]` — compare two tickers
   - `!compare_sp500 <ticker> [period]` — compare a ticker vs S&P 500
   - `!help` — command reference
-- Server‑scoped alerting loop with a read‑only #stock-alerts channel, powered by [`main.check_stock_percent_changes`](main.py).
-- Robust ticker lookup: company name or ticker via [`database_service.get_ticker_by_name`](database_service.py).
-- PostgreSQL schema and seed via [utils/init_db.py](utils/init_db.py), using SEC company tickers from [utils/collect_stocks_names.py](utils/collect_stocks_names.py) (no CSV needed).
-- Docker images for bot runtime and a Dev Container for local iteration.
-- Automated deploy to EC2 using [/.github/workflows/main.yml](.github/workflows/main.yml).
 
 ---
 
@@ -43,8 +54,6 @@ See source code in [main.py](main.py), DB layer in [database_service.py](databas
 - Pro: higher watch limits (default 50) and premium commands:
   - `!compare`, `!compare_sp500`
   - Extended fields in `!metrics` (targets, recommendation, growth, FCF)
-
-Plans are stored in the DB (`plan`, `server_plan` tables) and seeded by [utils/init_db.py](utils/init_db.py). You can change a server plan via `database_service.update_server_plan`.
 
 Environment overrides for limits:
 
@@ -58,6 +67,13 @@ PRO_PLAN_MAX_WATCHED_STOCKS=50
 
 ## Architecture
 
+**Infrastructure:**
+- **Bot Backend**: AWS EC2 + Docker + PostgreSQL
+- **Web Frontend**: AWS S3 (static hosting) + CloudFront (CDN)
+- **CI/CD**: GitHub Actions with dual deployment pipelines
+- **Domain**: Custom domain with SSL/TLS via CloudFront
+
+**Bot Components:**
 - Bot entrypoint: [main.py](main.py)
   - Commands, embeds, charts, news, and alert task loop [`main.check_stock_percent_changes`](main.py)
 - Database service: [database_service.py](database_service.py)
@@ -90,45 +106,59 @@ The entrypoint runs [utils/init_db.py](utils/init_db.py) to create/seed the DB, 
 
 ## Web App (Landing Page)
 
-This repo includes a small React + Vite landing page in `aurelius-webpage/`. 
+This repo includes a React + Vite landing page in `aurelius-webpage/` that showcases features, pricing, and Discord chat previews. The website is completely decoupled from the bot runtime.
 
-- Dev:
-  ```bash
-  cd aurelius-webpage
-  npm install
-  npm run dev
-  ```
-- Build:
-  ```bash
-  npm run build
-  ```
+**Local Development:**
+```bash
+cd aurelius-webpage
+npm install
+npm run dev
+```
 
-The site showcases features, pricing, and a Discord chat preview. It is decoupled from the bot runtime.
-It is deployed in AWS S3 with a custom domain name [aureliusbot.app](aureliusbot.app)
+**Production Build:**
+```bash
+npm run build
+```
 
-## Deployment (GitHub Actions → EC2)
+**Deployment Architecture:**
+- **Hosting**: AWS S3 static website hosting
+- **CDN**: CloudFront distribution for global content delivery
+- **Domain**: Custom domain [aureliusbot.app](https://aureliusbot.app) with SSL/TLS
+- **Cache Strategy**: 
+  - HTML files: `no-cache` for immediate updates
+  - Static assets: `max-age=31536000, immutable` for optimal performance
+- **Deployment**: Automated via GitHub Actions on changes to `aurelius-webpage/`
 
-Pushes to `main` trigger [/.github/workflows/main.yml](.github/workflows/main.yml) which:
+## Deployment (Dual CI/CD Pipeline)
 
-- Builds and pushes a Docker image to Docker Hub
-- SSHes into the EC2 host
-- Pulls latest code/image
-- Runs the bot container with the updates
+This project uses **separate GitHub Actions workflows** for independent deployment of bot and website components:
 
-Configure repository secrets:
+### Bot Deployment ([.github/workflows/bot-deploy.yml](.github/workflows/bot-deploy.yml))
 
-- `DOCKER_NAME`, `DOCKER_TOKEN`
-- `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`
+Triggers on pushes to `main` affecting bot-related files:
+- Builds and pushes Docker image to Docker Hub
+- Deploys to AWS EC2 via SSH
+- Handles container lifecycle management (stop/remove/pull/run)
 
-On the EC2 host, ensure the Docker network and DB container exist (run once):
-
+**EC2 Prerequisites** (run once):
 ```bash
 bash scripts/container_network.sh
 bash scripts/start_bd.sh
 ```
 
-Then the workflow’s deploy step will start the bot via:
-- [scripts/run_bot_container.sh](scripts/run_bot_container.sh)
+### Website Deployment ([.github/workflows/website-deploy.yml](.github/workflows/website-deploy.yml))
+
+Triggers on pushes to `main` affecting `aurelius-webpage/`:
+- Builds React app with Vite
+- Syncs build artifacts to AWS S3
+- Invalidates CloudFront cache for immediate updates
+- Implements optimized caching strategy
+
+**Architecture Benefits:**
+- **Independent scaling**: Bot and website deploy separately
+- **Path-based triggers**: Only affected components redeploy
+- **Optimized caching**: Static assets cached long-term, HTML files cache-busted
+- **Global CDN**: CloudFront ensures low latency worldwide
 
 ---
 
