@@ -103,7 +103,6 @@ async def on_entitlement_update(entitlement):
             db.create_entitlement(guild_id, user_id, entitlement_id, plan_name)
             logger.info(f"Changed entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
 
-        logger.info(f"Updated entitlement: Guild {guild_id}, User {user_id}, Plan {plan_name}")
 
 @bot.event
 async def on_entitlement_delete(entitlement):
