@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 import os
 import yfinance as yf
 import matplotlib.dates as mdates
-import database_service as db
+import database_services.server_plan_db as server_plan_db
+import database_services.stock_db as stock_db
 from helpers import build_plot, round_large_number
 import logging
 
@@ -38,13 +39,13 @@ async def compare(ctx, arg1, arg2, period="1y"):
 
     # Check if server has a paid plan
     server_id = ctx.message.guild.id
-    plan = db.get_server_plan(server_id)
+    plan = server_plan_db.get_server_plan(server_id)
     if not plan or plan[0] != "PRO":
         await ctx.send("❌ This command is available for PRO plan subscribers only. Please upgrade your plan to access this feature.")
         return
 
-    ticker1 = db.get_ticker_by_name(arg1)
-    ticker2 = db.get_ticker_by_name(arg2)
+    ticker1 = stock_db.get_ticker_by_name(arg1)
+    ticker2 = stock_db.get_ticker_by_name(arg2)
     if not ticker1:
         await ctx.send(f"❌ Ticker symbol for '{arg1}' not found.")
         return
@@ -110,12 +111,12 @@ async def compare_sp500(ctx, arg, period="1y"):
 
     # Check if server has a paid plan
     server_id = ctx.message.guild.id
-    plan = db.get_server_plan(server_id)
+    plan = server_plan_db.get_server_plan(server_id)
     if not plan or plan[0] != "PRO":
         await ctx.send("❌ This command is available for PRO plan subscribers only. Please upgrade your plan to access this feature.")
         return
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = stock_db.get_ticker_by_name(arg)
     sp500_ticker = "^GSPC"  # Yahoo Finance ticker for S&P 500
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
@@ -163,4 +164,3 @@ async def compare_sp500(ctx, arg, period="1y"):
         await ctx.send(f"⚠️ Error generating comparison chart: {str(e)}")
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
-db.close_connection()

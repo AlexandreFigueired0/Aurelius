@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 import os
 import yfinance as yf
 import matplotlib.dates as mdates
-import database_service as db
+import database_services.server_plan_db as server_plan_db
+import database_services.stock_db as stock_db
 from helpers import build_plot, round_large_number, shorten_description
 import logging
 
@@ -36,7 +37,7 @@ NEWS_PER_PAGE = 5
 async def stock(ctx, arg, period="1mo"):
     '''Fetch live stock  price, change %, market cap for a given ticker symbol.'''
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = stock_db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
@@ -78,7 +79,7 @@ async def stock(ctx, arg, period="1mo"):
 async def info(ctx, arg):
     '''Fetch company information (description, sector, CEO, etc.) for a given ticker symbol.'''
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = stock_db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
@@ -121,7 +122,7 @@ async def info(ctx, arg):
 async def chart(ctx, arg, period="1mo"):
     '''Fetch historical stock data for a given ticker symbol and period (default: 1 month).'''
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = stock_db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
@@ -151,7 +152,7 @@ async def news(ctx, arg):
     '''Fetch latest news articles for a given ticker symbol.'''
 
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = stock_db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
@@ -211,7 +212,7 @@ async def news(ctx, arg):
 async def metrics(ctx, arg):
     '''Fetch key financial metrics for a given ticker symbol.'''
 
-    ticker = db.get_ticker_by_name(arg)
+    ticker = stock_db.get_ticker_by_name(arg)
     if not ticker:
         await ctx.send(f"❌ Ticker symbol for '{arg}' not found.")
         return
@@ -224,7 +225,7 @@ async def metrics(ctx, arg):
 
     # If server has PRO plan, show advanced metrics
     server_id = ctx.message.guild.id
-    plan = db.get_server_plan(server_id)
+    plan = server_plan_db.get_server_plan(server_id)
 
     ev = round(float(info.get("enterpriseValue", 0)), 2)
     trailing_pe = round(float(info.get("trailingPE", 0)), 2)
@@ -268,4 +269,3 @@ async def metrics(ctx, arg):
     await ctx.send(embed=embed)
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
-db.close_connection()

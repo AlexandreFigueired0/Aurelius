@@ -3,7 +3,7 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-import database_service as db
+import database_services.server_db as server_db
 import logging
 from alerts import check_stock_percent_changes
 
@@ -43,7 +43,7 @@ async def on_guild_join(guild):
     # When the bot joins a new server, ensure the server is in the database
     server_id = guild.id
     server_name = guild.name
-    db.insert_server(server_id, server_name)
+    server_db.insert_server(server_id, server_name)
 
 @bot.command()
 async def hello(ctx):
