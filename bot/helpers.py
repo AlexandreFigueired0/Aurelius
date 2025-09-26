@@ -5,7 +5,6 @@ from io import BytesIO
 import yfinance as yf
 
 
-
 def build_plot( data: list , title: str, x_label: str, y_label: str, line_labels:list, line_colors: list):
     ''' Build a matplotlib plot from given data'''
     # Create chart
