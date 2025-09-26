@@ -1,6 +1,8 @@
 import React from 'react';
 import '../styles/Pricing.css';
 
+
+
 const Pricing = () => {
   const pricingPlans = [
     {
@@ -36,7 +38,7 @@ const Pricing = () => {
         '✅ Priority support',
       ],
       buttonText: 'Subscribe Now',
-      buttonLink: 'https://discord.com/discovery/applications/1415287898760286303/store',
+      buttonLink: "https://discord.com/discovery/applications/1415287898760286303/store",
       note: 'Start monitoring multiple stocks and analyzing complex metrics'
     },
 

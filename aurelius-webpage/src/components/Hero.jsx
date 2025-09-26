@@ -16,7 +16,7 @@ const Hero = () => {
             Discuss investments with your community and make informed decisions.
           </p>
           <div className="hero-buttons">
-            <a href="#invite" className="btn btn-primary">Add to Discord</a>
+            <a target="_blank" href="https://discord.com/oauth2/authorize?client_id=1415287898760286303&permissions=292058082304&integration_type=0&scope=bot" className="btn btn-primary">Add to Discord</a>
             <a href="#features" className="btn btn-secondary">Learn More</a>
           </div>
         </div>
