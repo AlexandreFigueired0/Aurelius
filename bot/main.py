@@ -1,37 +1,16 @@
 import discord
 from discord.ext import commands
 import logging
-from dotenv import load_dotenv
-import os
+from .config import bot, logger, token, handler
 import database_services.server_db as server_db
-import logging
-from alerts import check_stock_percent_changes
 
-load_dotenv()
-
-token = os.getenv("DISCORD_TOKEN")
-
-handler = logging.FileHandler(filename='discord.log', encoding="utf-8", mode="w")
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('aurelius.log'),  # Your app logs
-        logging.StreamHandler()  # Also print to console
-    ]
-)
-logger = logging.getLogger('aurelius')
-
-bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
+# Import all modules to register their commands and events
+from . import alerts, stock, comparisons, events
 
 @bot.event
 async def on_ready():
     logger.info(f"{bot.user.name} is ready")
-    check_stock_percent_changes.start()
+    alerts.check_stock_percent_changes.start()
 
 @bot.event
 async def on_message(message):
@@ -76,4 +55,5 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+if __name__ == "__main__":
+    bot.run(token, log_handler=handler, log_level=logging.DEBUG)

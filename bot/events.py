@@ -1,33 +1,8 @@
 import discord
 from discord.ext import commands
-import logging
-from dotenv import load_dotenv
-import os
+from .config import bot, logger
+
 import database_services.server_plan_db as server_plan_db
-import logging
-
-
-load_dotenv()
-
-token = os.getenv("DISCORD_TOKEN")
-
-handler = logging.FileHandler(filename='discord.log', encoding="utf-8", mode="w")
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('aurelius.log'),  # Your app logs
-        logging.StreamHandler()  # Also print to console
-    ]
-)
-logger = logging.getLogger('aurelius')
-
-bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
-NEWS_PER_PAGE = 5
 
 
 @bot.event
@@ -84,4 +59,4 @@ async def on_entitlement_delete(entitlement):
     server_plan_db.remove_entitlement(guild_id, entitlement_id)
     logger.info(f"Revoked entitlement: Guild {guild_id}, Entitlement ID {entitlement_id}")
 
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+# Events are registered when this module is imported

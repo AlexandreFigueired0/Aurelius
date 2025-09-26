@@ -1,39 +1,11 @@
 import discord
 from discord.ext import commands, tasks
-import logging
-from dotenv import load_dotenv
-import os
 import yfinance as yf
+from .config import bot, logger, STOCKS_ALERT_CHANNEL_NAME, FREE_PLAN_MAX_WATCHED_STOCKS, PRO_PLAN_MAX_WATCHED_STOCKS
 
 import database_services.subscribed_stock_db as subscribed_stock_db
 import database_services.stock_db as stock_db
 import database_services.server_plan_db as server_plan_db
-import logging
-
-load_dotenv()
-
-token = os.getenv("DISCORD_TOKEN")
-
-handler = logging.FileHandler(filename='discord.log', encoding="utf-8", mode="w")
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('aurelius.log'),  # Your app logs
-        logging.StreamHandler()  # Also print to console
-    ]
-)
-logger = logging.getLogger('aurelius')
-
-bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
-
-STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
-FREE_PLAN_MAX_WATCHED_STOCKS=int(os.getenv("FREE_PLAN_MAX_WATCHED_STOCKS", 5))
-PRO_PLAN_MAX_WATCHED_STOCKS=int(os.getenv("PRO_PLAN_MAX_WATCHED_STOCKS", 50))
 
 
 @bot.command()
@@ -172,5 +144,3 @@ async def check_stock_percent_changes():
             else: # Reset alert state if price goes back within threshold
                 if alerted:
                     subscribed_stock_db.reset_stock_alert(server_id, ticker)
-
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)

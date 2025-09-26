@@ -2,8 +2,8 @@ import psycopg2
 import os
 import datetime
 from dotenv import load_dotenv
-import server_db
-import plan_db
+from . import server_db
+from . import plan_db
 
 load_dotenv()  # Load environment variables from .env file
 

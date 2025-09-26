@@ -1,8 +1,8 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
-import server_db
-import stock_db
+from . import server_db
+from . import stock_db
 
 load_dotenv()  # Load environment variables from .env file
 
