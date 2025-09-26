@@ -1,13 +1,11 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
 import yfinance as yf
 import matplotlib.dates as mdates
-from io import BytesIO
 import database_service as db
-from datetime import datetime, timezone
 from helpers import build_plot, round_large_number, shorten_description
 import logging
 
@@ -33,12 +31,6 @@ logger = logging.getLogger('aurelius')
 bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
 NEWS_PER_PAGE = 5
 
-STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
-FREE_PLAN_MAX_WATCHED_STOCKS=int(os.getenv("FREE_PLAN_MAX_WATCHED_STOCKS", 5))
-PRO_PLAN_MAX_WATCHED_STOCKS=int(os.getenv("PRO_PLAN_MAX_WATCHED_STOCKS", 50))
-DISCORD_PRO_SERVER_SKU_ID=int(os.getenv("DISCORD_PRO_SERVER_SKU_ID"))
-DISCORD_PRO_PLAN_NAME=os.getenv("DISCORD_PRO_PLAN_NAME", "PRO")
-DISCORD_FREE_PLAN_NAME=os.getenv("DISCORD_FREE_PLAN_NAME", "Free")
 
 @bot.command()
 async def stock(ctx, arg, period="1mo"):

@@ -1,15 +1,11 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-import yfinance as yf
-import matplotlib.dates as mdates
-from io import BytesIO
 import database_service as db
-from datetime import datetime, timezone
-from helpers import build_plot, round_large_number, shorten_description
 import logging
+from alerts import check_stock_percent_changes
 
 load_dotenv()
 
@@ -31,22 +27,27 @@ logging.basicConfig(
 logger = logging.getLogger('aurelius')
 
 bot = commands.Bot(command_prefix = '!', intents=intents, help_command=None)
-NEWS_PER_PAGE = 5
 
-STOCKS_ALERT_CHANNEL_NAME = "stock-alerts"
-FREE_PLAN_MAX_WATCHED_STOCKS=int(os.getenv("FREE_PLAN_MAX_WATCHED_STOCKS", 5))
-PRO_PLAN_MAX_WATCHED_STOCKS=int(os.getenv("PRO_PLAN_MAX_WATCHED_STOCKS", 50))
-DISCORD_PRO_SERVER_SKU_ID=int(os.getenv("DISCORD_PRO_SERVER_SKU_ID"))
-DISCORD_PRO_PLAN_NAME=os.getenv("DISCORD_PRO_PLAN_NAME", "PRO")
-DISCORD_FREE_PLAN_NAME=os.getenv("DISCORD_FREE_PLAN_NAME", "Free")
+@bot.event
+async def on_ready():
+    logger.info(f"{bot.user.name} is ready")
+    check_stock_percent_changes.start()
 
+@bot.event
+async def on_message(message):
+    if message.author == bot.user: return # Do not answer yourself
+    await bot.process_commands(message)
+    
+@bot.event
+async def on_guild_join(guild):
+    # When the bot joins a new server, ensure the server is in the database
+    server_id = guild.id
+    server_name = guild.name
+    db.insert_server(server_id, server_name)
 
 @bot.command()
 async def hello(ctx):
     await ctx.send(f"Hello {ctx.author.mention}!")
-
-
-
 
 
 @bot.command()
@@ -76,4 +77,3 @@ async def help(ctx):
 
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
-db.close_connection()
