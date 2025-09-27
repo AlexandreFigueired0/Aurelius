@@ -7,9 +7,9 @@ on:
     paths:
       - 'scripts/**'
       - 'utils/**'
-      - 'database_service.py'
+      - 'database_services/**'
       - 'Dockerfile'
-      - 'main.py'
+      - 'bot/**'
       - 'requirements.txt'
       - '.github/workflows/bot-deploy.yml'
 
