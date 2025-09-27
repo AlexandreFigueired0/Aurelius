@@ -115,7 +115,7 @@ async def chart(ctx, arg, period="1mo"):
         line_color="#1f77b4"
         x = mdates.date2num(hist.index.to_pydatetime())
         y = hist["Close"].values
-        buffer = build_plot([(x,y)], f"{ticker} - Last 1 Month", "Date", "Price (USD)", [ticker], [line_color])
+        buffer = build_plot([(x,y)], f"{ticker} - Last {period}", "Date", "Price (USD)", [ticker], [line_color])
         file = discord.File(buffer, filename="chart.png")
 
         await ctx.send(file=file)
