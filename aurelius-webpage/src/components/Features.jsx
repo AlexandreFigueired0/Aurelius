@@ -19,7 +19,7 @@ const Features = () => {
       description: 'Access detailed stock information, financial ratios, and fundamental analysis data.'
     },
     {
-      icon: '⚡',
+      icon: '🚨',
       title: 'Market Alerts',
       description: 'Set up custom alerts for real-time price changes.'
     }
