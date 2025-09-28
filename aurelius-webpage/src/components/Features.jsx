@@ -11,7 +11,7 @@ const Features = () => {
     {
       icon: '📰',
       title: 'Financial News',
-      description: 'Stay updated with the latest market news, earnings reports, and financial analysis from trusted sources.'
+      description: 'Stay updated with the latest market news.'
     },
     {
       icon: '🔍',
@@ -21,7 +21,7 @@ const Features = () => {
     {
       icon: '⚡',
       title: 'Market Alerts',
-      description: 'Set up custom alerts for price targets, volume spikes, and breaking financial news.'
+      description: 'Set up custom alerts for real-time price changes.'
     }
   ];
 
