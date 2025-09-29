@@ -21,7 +21,7 @@ const Pricing = () => {
         '❌ Comparison of stocks against S&P 500',
       ],
       buttonText: 'Get Started',
-      buttonLink: '#invite',
+      buttonLink: 'https://discord.com/oauth2/authorize?client_id=1415287898760286303&permissions=292058082304&integration_type=0&scope=bot',
       note: 'Experiment before committing'
     },
     {
