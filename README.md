@@ -1,15 +1,18 @@
 # Aurelius — Discord Stock Bot
 
-Aurelius is a Discord bot that delivers live stock data, charts, news, and price alerts to your server. It's built to be production-re- **Full-stack application**: Discord bot backend + React frontend with modern deployment pipeline
-- **Cloud-native architecture**: AWS multi-service deployment (EC2, S3, CloudFront)
-- **Advanced CI/CD**: Dual-pipeline GitHub Actions with path-based triggers and independent scaling
-- **Performance optimization**: CloudFront CDN with intelligent caching strategy for global reach
-- **Clean separation of concerns**: Bot backend and web frontend deployed independently
-- **Production-grade infrastructure**: 
-  - Dockerized microservices with persistent PostgreSQL
-  - Static site hosting with immutable asset caching
-  - SSL/TLS termination via CloudFront
-- **Developer experience**: VS Code Dev Containers, automated deployments, and modular scripts
+Aurelius is a production‑ready Discord bot that delivers real‑time stock data, charts, news, comparisons, alerts, and financial metrics directly into your server. It ships with an independently deployed marketing site and full cloud infrastructure.
+
+Core highlights:
+- **Full‑stack application**: Python Discord bot backend + React/Vite landing site
+- **Cloud‑native architecture**: AWS (EC2, S3, CloudFront) with path‑scoped CI/CD
+- **Advanced CI/CD**: Dual GitHub Actions pipelines (bot + website) with selective deploys
+- **High performance**: Global CDN (CloudFront) + immutable asset caching strategy
+- **Clean separation**: Bot runtime and static site are fully decoupled
+- **Production‑grade infra**:
+  - Dockerized services + persistent PostgreSQL volume
+  - Static site in S3 fronted by CloudFront (HTTPS & caching)
+  - Streamlined rollout via container + artifact pipelines
+- **Great DX**: VS Code Dev Containers, bootstrap scripts, automated seeding
 
 **Bot Backend:**
 - Core runtime: Python 3.13, [discord.py](https://discordpy.readthedocs.io/)
